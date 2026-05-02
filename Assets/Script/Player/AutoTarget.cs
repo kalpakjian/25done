@@ -8,8 +8,21 @@ public class AutoTarget : StateMachineBehaviour {
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
 
         Player = animator.transform;
+		FaceClosestTarget();
+	}
+
+	override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
+
+		FaceClosestTarget();
+	}
+
+	void FaceClosestTarget()
+	{
+		if (Player == null) return;
+
 		GameObject target = FindClosestTarget(Player.transform.position, range, "HitTarget");
-		if (target!=null) {
+		if (target != null)
+		{
 			Vector3 lookPos = target.transform.position;
 			lookPos.y = Player.position.y;
 			Player.LookAt(lookPos);

@@ -28,6 +28,10 @@ public class PlayerController : MonoBehaviour
 
 	private bool isRolling = false;
 
+	[Header("Auto Face Enemy")]
+	public bool autoFaceEnemy = true;
+	public float autoFaceRange = 10f;
+
 	void Start()
 	{
 		anim = GetComponent<Animator>();
@@ -79,6 +83,40 @@ public class PlayerController : MonoBehaviour
 
 			if (moveSpeed > 0.05f && AllowRotate)
 				RotateChar();
+		}
+
+		// 自動面向最近的存活 Enemy（在移動時不覆蓋手動轉向）
+		if (autoFaceEnemy && AllowRotate && moveSpeed <= 0.05f)
+		{
+			AutoFaceNearestEnemy();
+		}
+	}
+
+	void AutoFaceNearestEnemy()
+	{
+		Enemy[] enemies = FindObjectsOfType<Enemy>();
+
+		Enemy closest = null;
+		float minDist = Mathf.Infinity;
+
+		foreach (var enemy in enemies)
+		{
+			if (enemy.IsDead) continue;
+
+			float dist = Vector3.Distance(transform.position, enemy.transform.position);
+			if (dist < autoFaceRange && dist < minDist)
+			{
+				minDist = dist;
+				closest = enemy;
+			}
+		}
+
+		if (closest != null)
+		{
+			Vector3 lookPos = closest.transform.position;
+			lookPos.y = transform.position.y;
+			Quaternion targetRot = Quaternion.LookRotation(lookPos - transform.position);
+			transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotSpeed * Time.deltaTime);
 		}
 	}
 

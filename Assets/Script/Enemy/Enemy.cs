@@ -18,6 +18,7 @@ public class Enemy : MonoBehaviour {
 	public float maxHP = 200;
 	protected float HP;
 	protected bool dead;
+	public bool IsDead => dead;
 	public float hurtInterval = 0.3f;
 	protected float nextHurtTime = 0;
 
