@@ -71,7 +71,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b4d186fde0c7b344880cdaba4ff9d1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: 3
+  range: 5
 --- !u!114 &-6815420695117384385
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -654,7 +654,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b4d186fde0c7b344880cdaba4ff9d1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: 3
+  range: 5
 --- !u!1101 &3253814970809102132
 AnimatorStateTransition:
   m_ObjectHideFlags: 1
@@ -910,7 +910,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b4d186fde0c7b344880cdaba4ff9d1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: 3
+  range: 5
 --- !u!1101 &8451371811728391438
 AnimatorStateTransition:
   m_ObjectHideFlags: 1

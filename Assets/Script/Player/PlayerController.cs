@@ -24,6 +24,9 @@ public class PlayerController : MonoBehaviour
 
 	public float power = 1;
 	public float rollPower = 0.4f;
+	public float rollSpeedMultiplier = 1.5f;
+
+	private bool isRolling = false;
 
 	void Start()
 	{
@@ -62,8 +65,12 @@ public class PlayerController : MonoBehaviour
 						if (NextAttack)
 							anim.SetTrigger("attack");
 					}
-					else
-						anim.SetTrigger("roll");
+				else
+				{
+					anim.SetTrigger("roll");
+					anim.speed = rollSpeedMultiplier;
+					isRolling = true;
+				}
 				}
 				moveSpeed = 0;
 			}
@@ -98,6 +105,13 @@ public class PlayerController : MonoBehaviour
 		{
 			// 其他狀態（走路等）：正常套用 root motion
 			transform.position += anim.deltaPosition * power;
+
+			// roll 結束後重置動畫速度
+			if (isRolling)
+			{
+				anim.speed = 1.0f;
+				isRolling = false;
+			}
 		}
 	}
 
