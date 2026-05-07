@@ -1,160 +1,215 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
+    [Header("Movement")]
+    public float rotSpeed = 10f;
+    public float moveSensitivity = 3f;
+    public float power = 1f;
 
-	public float rotSpeed = 10;
-	public float moveSensitivity = 3;
-	public float tapSensitivity = 3;
+    [Header("Tap / Roll")]
+    public float tapMaxTime = 0.3f;
+    public float tapMoveThreshold = 0.03f;
+    public float rollMoveThreshold = 0.08f;
+    public float rollPower = 0.4f;
+    public float rollSpeedMultiplier = 1.5f;
 
-	Animator anim;
-	float moveSpeed;
-	float touchTime;
-	float startTouchTime = 0;
-	float screenDiagonal;
-	Vector2 touchStartPos;
-	Vector2 touchMove;
-	Vector3 moveDirection;
+    [Header("Auto Face Enemy")]
+    public bool autoFaceEnemy = true;
+    public float autoFaceRange = 10f;
 
-	[HideInInspector]
-	public bool AllowRotate = true;
-	[HideInInspector]
-	public bool NextAttack = true;
+    [HideInInspector] public bool AllowRotate = true;
+    [HideInInspector] public bool NextAttack = true;
 
-	public float power = 1;
-	public float rollPower = 0.4f;
-	public float rollSpeedMultiplier = 1.5f;
+    private Animator anim;
 
-	private bool isRolling = false;
+    private float moveSpeed;
+    private float touchStartTime;
+    private float screenDiagonal;
 
-	[Header("Auto Face Enemy")]
-	public bool autoFaceEnemy = true;
-	public float autoFaceRange = 10f;
+    private Vector2 touchStartPos;
+    private Vector2 currentTouchPos;
+    private Vector3 moveDirection;
 
-	void Start()
-	{
-		anim = GetComponent<Animator>();
-		screenDiagonal = Mathf.Sqrt(Mathf.Pow(Screen.width, 2) + Mathf.Pow(Screen.height, 2));
-	}
+    private bool isRolling = false;
+    private bool isTouching = false;
 
-	void Update()
-	{
-		if (Input.touchCount == 1)
-		{
-			Touch touch = Input.GetTouch(0);
+    void Start()
+    {
+        anim = GetComponent<Animator>();
+        screenDiagonal = Mathf.Sqrt(Screen.width * Screen.width + Screen.height * Screen.height);
+    }
 
-			if (touch.phase == TouchPhase.Began)
-			{
-				touchStartPos = touch.position;
-				startTouchTime = Time.time;
-			}
+    void Update()
+    {
+        HandleTouchInput();
 
-			if (touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary)
-			{
-				touchMove = touch.position;
-				moveSpeed = Vector2.Distance(touchStartPos, touchMove) / screenDiagonal;
-				moveSpeed = Mathf.Min(moveSpeed * moveSensitivity, 1);
-			}
+        anim.SetFloat("speed", moveSpeed);
 
-			if (touch.phase == TouchPhase.Ended)
-			{
-				touchTime = Time.time - startTouchTime;
-				moveSpeed = Vector2.Distance(touchStartPos, touchMove) / screenDiagonal;
-				touchMove = touch.position;
-				if (touchTime < 0.1f * tapSensitivity)
-				{
-					if (moveSpeed < 0.1f)
-					{
-						if (NextAttack)
-							anim.SetTrigger("attack");
-					}
-				else
-				{
-					anim.SetTrigger("roll");
-					anim.speed = rollSpeedMultiplier;
-					isRolling = true;
-				}
-				}
-				moveSpeed = 0;
-			}
+        if (isTouching && moveSpeed > 0.05f && AllowRotate)
+        {
+            RotateChar();
+        }
 
-			anim.SetFloat("speed", moveSpeed);
+        if (autoFaceEnemy && AllowRotate && moveSpeed <= 0.05f && !isTouching)
+        {
+            AutoFaceNearestEnemy();
+        }
+    }
 
-			if (moveSpeed > 0.05f && AllowRotate)
-				RotateChar();
-		}
+    void HandleTouchInput()
+    {
+        if (Input.touchCount != 1)
+        {
+            ResetTouchState();
+            return;
+        }
 
-		// 自動面向最近的存活 Enemy（在移動時不覆蓋手動轉向）
-		if (autoFaceEnemy && AllowRotate && moveSpeed <= 0.05f)
-		{
-			AutoFaceNearestEnemy();
-		}
-	}
+        Touch touch = Input.GetTouch(0);
 
-	void AutoFaceNearestEnemy()
-	{
-		Enemy[] enemies = FindObjectsOfType<Enemy>();
+        switch (touch.phase)
+        {
+            case TouchPhase.Began:
+                HandleTouchBegan(touch);
+                break;
 
-		Enemy closest = null;
-		float minDist = Mathf.Infinity;
+            case TouchPhase.Moved:
+            case TouchPhase.Stationary:
+                HandleTouchMoved(touch);
+                break;
 
-		foreach (var enemy in enemies)
-		{
-			if (enemy.IsDead) continue;
+            case TouchPhase.Ended:
+            case TouchPhase.Canceled:
+                HandleTouchEnded(touch);
+                break;
+        }
+    }
 
-			float dist = Vector3.Distance(transform.position, enemy.transform.position);
-			if (dist < autoFaceRange && dist < minDist)
-			{
-				minDist = dist;
-				closest = enemy;
-			}
-		}
+    void HandleTouchBegan(Touch touch)
+    {
+        isTouching = true;
+        touchStartPos = touch.position;
+        currentTouchPos = touch.position;
+        touchStartTime = Time.time;
+        moveSpeed = 0f;
+    }
 
-		if (closest != null)
-		{
-			Vector3 lookPos = closest.transform.position;
-			lookPos.y = transform.position.y;
-			Quaternion targetRot = Quaternion.LookRotation(lookPos - transform.position);
-			transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotSpeed * Time.deltaTime);
-		}
-	}
+    void HandleTouchMoved(Touch touch)
+    {
+        currentTouchPos = touch.position;
 
-	public void RotateChar()
-	{
-		Vector2 dragDirection = touchMove - touchStartPos;
-		moveDirection = new Vector3(dragDirection.x, 0, dragDirection.y);
-		moveDirection = Camera.main.transform.TransformDirection(moveDirection);
-		moveDirection.y = 0;
-		if (moveDirection != Vector3.zero)
-			transform.rotation = Quaternion.LookRotation(moveDirection);
-	}
+        float dragDistance = GetNormalizedDragDistance();
+        moveSpeed = Mathf.Min(dragDistance * moveSensitivity, 1f);
+    }
 
-	void OnAnimatorMove()
-	{
-		if (anim.GetCurrentAnimatorStateInfo(0).IsName("roll") ||
-		    anim.GetCurrentAnimatorStateInfo(0).IsName("roll2") ||
-		    anim.GetCurrentAnimatorStateInfo(0).IsName("roll3"))
-		{
-			// 滾動狀態：用 rollPower 縮小移動距離
-			transform.position += anim.deltaPosition * rollPower;
-		}
-		else
-		{
-			// 其他狀態（走路等）：正常套用 root motion
-			transform.position += anim.deltaPosition * power;
+    void HandleTouchEnded(Touch touch)
+    {
+        currentTouchPos = touch.position;
 
-			// roll 結束後重置動畫速度
-			if (isRolling)
-			{
-				anim.speed = 1.0f;
-				isRolling = false;
-			}
-		}
-	}
+        float touchDuration = Time.time - touchStartTime;
+        float dragDistance = GetNormalizedDragDistance();
 
-	void LateUpdate()
-	{
-		anim.ResetTrigger("attack");
-	}
+        if (touchDuration <= tapMaxTime)
+        {
+            if (dragDistance <= tapMoveThreshold)
+            {
+                TryAttack();
+            }
+            else if (dragDistance >= rollMoveThreshold)
+            {
+                TryRoll();
+            }
+        }
+
+        ResetTouchState();
+    }
+
+    float GetNormalizedDragDistance()
+    {
+        return Vector2.Distance(touchStartPos, currentTouchPos) / screenDiagonal;
+    }
+
+    void TryAttack()
+    {
+        if (!NextAttack) return;
+
+        anim.ResetTrigger("attack");
+        anim.SetTrigger("attack");
+    }
+
+    void TryRoll()
+    {
+        anim.ResetTrigger("roll");
+        anim.SetTrigger("roll");
+        anim.speed = rollSpeedMultiplier;
+        isRolling = true;
+    }
+
+    void ResetTouchState()
+    {
+        isTouching = false;
+        moveSpeed = 0f;
+    }
+
+    void AutoFaceNearestEnemy()
+    {
+        Enemy[] enemies = FindObjectsOfType<Enemy>();
+
+        Enemy closest = null;
+        float minDist = Mathf.Infinity;
+
+        foreach (var enemy in enemies)
+        {
+            if (enemy.IsDead) continue;
+
+            float dist = Vector3.Distance(transform.position, enemy.transform.position);
+            if (dist < autoFaceRange && dist < minDist)
+            {
+                minDist = dist;
+                closest = enemy;
+            }
+        }
+
+        if (closest != null)
+        {
+            Vector3 lookPos = closest.transform.position;
+            lookPos.y = transform.position.y;
+
+            Quaternion targetRot = Quaternion.LookRotation(lookPos - transform.position);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotSpeed * Time.deltaTime);
+        }
+    }
+
+    public void RotateChar()
+    {
+        Vector2 dragDirection = currentTouchPos - touchStartPos;
+        moveDirection = new Vector3(dragDirection.x, 0, dragDirection.y);
+        moveDirection = Camera.main.transform.TransformDirection(moveDirection);
+        moveDirection.y = 0f;
+
+        if (moveDirection.sqrMagnitude > 0.001f)
+        {
+            transform.rotation = Quaternion.LookRotation(moveDirection);
+        }
+    }
+
+    void OnAnimatorMove()
+    {
+        AnimatorStateInfo state = anim.GetCurrentAnimatorStateInfo(0);
+
+        if (state.IsName("roll") || state.IsName("roll2") || state.IsName("roll3"))
+        {
+            transform.position += anim.deltaPosition * rollPower;
+        }
+        else
+        {
+            transform.position += anim.deltaPosition * power;
+
+            if (isRolling)
+            {
+                anim.speed = 1f;
+                isRolling = false;
+            }
+        }
+    }
 }
