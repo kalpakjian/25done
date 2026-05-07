@@ -1,15 +1,20 @@
 using UnityEngine;
 
-public class RotatableMotion : StateMachineBehaviour {
+public class RotatableMotion : StateMachineBehaviour
+{
+    public bool allow = true;
+    public bool changeDirection = false;
 
-	public bool allow = true;
-	public bool changeDirection = false;
+    override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        PlayerController player = animator.GetComponent<PlayerController>();
+        if (player == null) return;
 
-	override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
-		PlayerController Player = animator.GetComponent<PlayerController>();
-		Player.AllowRotate = allow;
-		if (changeDirection)
-			animator.GetComponent<PlayerController>().RotateChar();
-	}
+        player.AllowRotate = allow;
+
+        if (changeDirection)
+        {
+            player.RotateChar();
+        }
+    }
 }
-

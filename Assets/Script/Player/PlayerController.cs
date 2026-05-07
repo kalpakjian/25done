@@ -183,7 +183,11 @@ public class PlayerController : MonoBehaviour
     public void RotateChar()
     {
         Vector2 dragDirection = currentTouchPos - touchStartPos;
-        moveDirection = new Vector3(dragDirection.x, 0, dragDirection.y);
+
+        if (dragDirection.sqrMagnitude < 1f)
+            return;
+
+        moveDirection = new Vector3(dragDirection.x, 0f, dragDirection.y);
         moveDirection = Camera.main.transform.TransformDirection(moveDirection);
         moveDirection.y = 0f;
 
