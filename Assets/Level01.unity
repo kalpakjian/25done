@@ -1452,13 +1452,13 @@ MonoBehaviour:
   rotSpeed: 30
   moveSensitivity: 5
   tapSensitivity: 2
-  rollThreshold: 0.01
-  attackTargetRange: 3
   AllowRotate: 1
   NextAttack: 1
   power: 1
   rollPower: 0.3
-  rollSpeedMultiplier: 5
+  rollSpeedMultiplier: 1.5
+  autoFaceEnemy: 1
+  autoFaceRange: 5
 --- !u!82 &884804965
 AudioSource:
   m_ObjectHideFlags: 0
@@ -1567,7 +1567,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a697c0642c6aa1a48bbdb9b6950500b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHP: 100
+  maxHP: 1000
   HP: 0
   hurtInterval: 0.5
   invincible: 0
