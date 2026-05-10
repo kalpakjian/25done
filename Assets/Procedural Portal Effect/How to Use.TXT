@@ -1,0 +1,8 @@
+Simply drag and drop the Procedural Portal Effect prefab into your scene. To customize the portal, edit the Procedural Portal Effect material.
+
+Step-by-step
+1. Create a Quad and set its Scale (X, Y, Z) to 2.
+2. Create a new material using FX/Procedural Portal Effect.
+3. Assign the material to the quad.
+4. Adjust the material properties to fit your portal style.
+5. That’s it!
