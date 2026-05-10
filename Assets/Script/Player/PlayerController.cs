@@ -14,6 +14,11 @@ public class PlayerController : MonoBehaviour
     public float rollPower = 0.4f;
     public float rollSpeedMultiplier = 1.5f;
 
+    [Header("Hold Detection Debug")]
+    public float holdThreshold = 0.35f;
+    public float chargeThreshold = 0.9f;
+    public float holdMoveThreshold = 0.025f;
+
     [Header("Auto Face Enemy")]
     public bool autoFaceEnemy = true;
     public float autoFaceRange = 10f;
@@ -33,6 +38,9 @@ public class PlayerController : MonoBehaviour
 
     private bool isRolling = false;
     private bool isTouching = false;
+
+    private bool holdTriggered = false;
+    private bool chargeTriggered = false;
 
     void Start()
     {
@@ -92,6 +100,9 @@ public class PlayerController : MonoBehaviour
         currentTouchPos = touch.position;
         touchStartTime = Time.time;
         moveSpeed = 0f;
+
+        holdTriggered = false;
+        chargeTriggered = false;
     }
 
     void HandleTouchMoved(Touch touch)
@@ -99,6 +110,14 @@ public class PlayerController : MonoBehaviour
         currentTouchPos = touch.position;
 
         float dragDistance = GetNormalizedDragDistance();
+        float holdTime = Time.time - touchStartTime;
+
+        if (!holdTriggered && holdTime >= holdThreshold && dragDistance <= holdMoveThreshold)
+        {
+            holdTriggered = true;
+            Debug.Log("Guard");
+        }
+
         moveSpeed = Mathf.Min(dragDistance * moveSensitivity, 1f);
     }
 
@@ -109,16 +128,27 @@ public class PlayerController : MonoBehaviour
         float touchDuration = Time.time - touchStartTime;
         float dragDistance = GetNormalizedDragDistance();
 
-        if (touchDuration <= tapMaxTime)
+        bool isTap = touchDuration <= tapMaxTime && dragDistance <= tapMoveThreshold;
+        bool isRoll = touchDuration <= tapMaxTime && dragDistance >= rollMoveThreshold;
+        bool isHoldStill = touchDuration >= holdThreshold && dragDistance <= holdMoveThreshold;
+        bool isCharge = touchDuration >= chargeThreshold && dragDistance <= holdMoveThreshold;
+
+        if (isCharge)
         {
-            if (dragDistance <= tapMoveThreshold)
-            {
-                TryAttack();
-            }
-            else if (dragDistance >= rollMoveThreshold)
-            {
-                TryRoll();
-            }
+            chargeTriggered = true;
+            Debug.Log("Charge");
+        }
+        else if (isTap)
+        {
+            TryAttack();
+        }
+        else if (isRoll)
+        {
+            TryRoll();
+        }
+        else if (isHoldStill)
+        {
+            // 已經在 HandleTouchMoved 中輸出過 Guard，這裡不重複輸出
         }
 
         ResetTouchState();
@@ -149,6 +179,8 @@ public class PlayerController : MonoBehaviour
     {
         isTouching = false;
         moveSpeed = 0f;
+        holdTriggered = false;
+        chargeTriggered = false;
     }
 
     void AutoFaceNearestEnemy()
