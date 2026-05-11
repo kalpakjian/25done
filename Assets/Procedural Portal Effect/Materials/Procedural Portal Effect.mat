@@ -9,8 +9,6 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Procedural Portal Effect
   m_Shader: {fileID: 4800000, guid: fa57c1e73cab6ec48bb9c58105543f7b, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -19,44 +17,97 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
-    m_TexEnvs: []
+    m_TexEnvs:
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _AutoExpandMesh: 0
     - _BandCount: 10
     - _BandSpeed: 2
+    - _BumpScale: 1
     - _CenterFade: 2
+    - _Cutoff: 0.5
+    - _DetailNormalMapScale: 1
     - _Distortion: 0.1
+    - _DstBlend: 0
     - _EdgeFlicker: 0.7
     - _EdgeNoiseScale: 6.5
     - _EdgeNoiseSpeed: 2
     - _EdgeSoftness: 0.05
     - _EdgeWobble: 0.035
     - _ExpandPadding: 0.05
+    - _GlossMapScale: 1
+    - _Glossiness: 0.5
+    - _GlossyReflections: 1
     - _HaloIntensity: 1.5
     - _InnerFrameIntensity: 2
     - _InnerFrameOffset: 0.01
     - _InnerFrameWidth: 0.02
     - _InnerIntensity: 2
     - _MeshExpand: 1.2
+    - _Metallic: 0
+    - _Mode: 0
     - _NoiseScale: 1.5
     - _NoiseSpeed: 1
+    - _OcclusionStrength: 1
     - _Opacity: 1
     - _OuterFrameWidth: 0.01
     - _OuterHaloWidth: 0.2
     - _OuterIntensity: 4
+    - _Parallax: 0.02
     - _Rotation: 0
+    - _SmoothnessTextureChannel: 0
     - _SparkDensity: 80
     - _SparkIntensity: 2
     - _SparkRingBias: 0.7
     - _SparkSize: 0.04
     - _SparkSpeed: 2
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
     - _SwirlSpeed: 1
     - _SwirlStrength: 2.5
+    - _UVSec: 0
+    - _ZWrite: 1
     m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _HoleColor: {r: 0, g: 0, b: 0, a: 1}
     - _InnerColorA: {r: 0.03, g: 0.11999992, b: 0.21999994, a: 1}
     - _InnerColorB: {r: 0.07999993, g: 0.5499999, b: 1, a: 1}
