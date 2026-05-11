@@ -56,9 +56,10 @@ Shader "FX/Procedural Portal Effect"
 
         SubShader
         {
-            Tags { "Queue" = "Transparent" "RenderType" = "Transparent" "IgnoreProjector" = "True" }
+            Tags { "Queue" = "Transparent+100" "RenderType" = "Transparent" "IgnoreProjector" = "True" }
             Cull Off
             ZWrite Off
+            ZTest Always
             Lighting Off
             Fog { Mode Off }
 
@@ -345,8 +346,8 @@ Shader "FX/Procedural Portal Effect"
 
             Pass
             {
-                Tags { "LightMode" = "Always" }
                 Blend SrcAlpha OneMinusSrcAlpha
+                ZTest Always
                 CGPROGRAM
                 #pragma target 3.0
                 #pragma vertex vert
@@ -356,8 +357,8 @@ Shader "FX/Procedural Portal Effect"
 
             Pass
             {
-                Tags { "LightMode" = "Always" }
                 Blend One One
+                ZTest Always
                 CGPROGRAM
                 #pragma target 3.0
                 #pragma vertex vert
