@@ -40,7 +40,6 @@ public class PlayerController : MonoBehaviour
     private bool isTouching = false;
 
     private bool holdTriggered = false;
-    private bool chargeTriggered = false;
 
     void Start()
     {
@@ -102,7 +101,6 @@ public class PlayerController : MonoBehaviour
         moveSpeed = 0f;
 
         holdTriggered = false;
-        chargeTriggered = false;
     }
 
     void HandleTouchMoved(Touch touch)
@@ -135,7 +133,6 @@ public class PlayerController : MonoBehaviour
 
         if (isCharge)
         {
-            chargeTriggered = true;
             Debug.Log("Charge");
         }
         else if (isTap)
@@ -180,7 +177,6 @@ public class PlayerController : MonoBehaviour
         isTouching = false;
         moveSpeed = 0f;
         holdTriggered = false;
-        chargeTriggered = false;
     }
 
     void AutoFaceNearestEnemy()
