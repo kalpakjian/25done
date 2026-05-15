@@ -3572,6 +3572,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   target: {fileID: 1484573400}
   smoothing: 5
+  cameraRotation: {x: 45, y: 45, z: 0}
+  positionOffset: {x: 0, y: -6, z: 0}
 --- !u!114 &998856292
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5049,7 +5051,7 @@ MonoBehaviour:
   tapMaxTime: 0.3
   tapMoveThreshold: 0.03
   rollMoveThreshold: 0.08
-  rollPower: 0.7
+  rollPower: 0.9
   rollSpeedMultiplier: 1.5
   holdThreshold: 0.35
   chargeThreshold: 0.9
