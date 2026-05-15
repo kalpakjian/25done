@@ -34,4 +34,23 @@ public class CameraFollow : MonoBehaviour {
                                             targetCamPos,
                                             smoothing * Time.deltaTime);
     }
+
+    /// <summary>
+    /// 瞬間跳到目標位置（用於傳送後避免相機緩移途中全黑）
+    /// </summary>
+    public void SnapToTarget()
+    {
+        if (rb != null)
+        {
+            transform.position = rb.position + offset + positionOffset;
+        }
+    }
+
+    /// <summary>
+    /// 傳入目標世界座標，相機直接跳到對應位置（傳送瞬間用，不依賴 rb.position）
+    /// </summary>
+    public void SnapToPosition(Vector3 targetWorldPos)
+    {
+        transform.position = targetWorldPos + offset + positionOffset;
+    }
 }

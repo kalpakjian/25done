@@ -9,6 +9,12 @@ public class Portal : MonoBehaviour
     [SerializeField] private Portal destinationPortal;      // The portal at the destination (optional)
     [SerializeField] private bool isEndpoint = false;       // Is this an endpoint portal (no teleportation)
 
+    [Header("Fog Override (地底房間請勾選)")]
+    [SerializeField] private bool overrideFog = false;      // 傳送後是否覆蓋霧設定
+    [SerializeField] private bool disableFogCompletely = true; // 直接停用霧組件（最強力）
+    [SerializeField] private float targetFogHeight = -1000f;// 目的地的霧高度（地底設低於房間底部）
+    [SerializeField] private float targetFogDensity = 0f;  // 目的地的霧密度（地底建議設為 0）
+
     [Header("Animation")]
     [SerializeField] private float scaleUpDuration = 1.5f;  // Time to grow from 0 to full size
     [SerializeField] private float scaleDownDuration = 1.5f;// Time to shrink from full size to 0
@@ -139,6 +145,42 @@ public class Portal : MonoBehaviour
                 other.transform.position = targetPoint.position;
 
                 if (cc != null) cc.enabled = true;
+
+                // 相機瞬間跳到新位置，避免 Lerp 緩移途中渲染黑暗空間
+                CameraFollow cam = Camera.main?.GetComponent<CameraFollow>();
+                if (cam != null) cam.SnapToPosition(targetPoint.position);
+
+                // 覆蓋霧設定（地底房間用）
+                if (overrideFog)
+                {
+                    PostProcessHeightFog fog = FindObjectOfType<PostProcessHeightFog>();
+                    if (fog != null)
+                    {
+                        if (disableFogCompletely)
+                        {
+                            fog.enabled = false;  // 完全停用霧效果
+                            Debug.Log("Portal: Height Fog 已停用");
+                        }
+                        else
+                        {
+                            fog.fogHeight = targetFogHeight;
+                            fog.fogDensity = targetFogDensity;
+                            fog.SetFogProperties();
+                            Debug.Log("Portal: Height Fog 已更新");
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Portal: 找不到 PostProcessHeightFog 組件！");
+                    }
+                }
+
+                // 強制刷新 Light Probe，避免傳送後燈光全黑
+                foreach (var renderer in other.GetComponentsInChildren<Renderer>())
+                {
+                    renderer.UpdateGIMaterials();
+                }
+                LightProbes.Tetrahedralize();
             }
 
             // After teleport or reaching endpoint: both portals wait, then shrink and disappear

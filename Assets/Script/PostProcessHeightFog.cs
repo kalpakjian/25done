@@ -30,7 +30,7 @@ public class PostProcessHeightFog : MonoBehaviour
         Graphics.Blit(source, destination, material);
     }
 
-    void SetFogProperties()
+    public void SetFogProperties()
     {
         material.SetFloat("_FogDensity", fogDensity);
         material.SetFloat("_FogHeight", fogHeight);

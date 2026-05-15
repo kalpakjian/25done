@@ -4,8 +4,9 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
     public float rotSpeed = 10f;
-    public float moveSensitivity = 3f;
+    public float moveSensitivity = 6f;
     public float power = 1f;
+    public float runPowerMultiplier = 1.5f;
 
     [Header("Tap / Roll")]
     public float tapMaxTime = 0.3f;
@@ -116,7 +117,7 @@ public class PlayerController : MonoBehaviour
             Debug.Log("Guard");
         }
 
-        moveSpeed = Mathf.Min(dragDistance * moveSensitivity, 1f);
+        moveSpeed = Mathf.Min(dragDistance * moveSensitivity, 2f);
     }
 
     void HandleTouchEnded(Touch touch)
@@ -235,7 +236,8 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            transform.position += anim.deltaPosition * power;
+            float currentPower = (moveSpeed >= 0.5f) ? power * runPowerMultiplier : power;
+            transform.position += anim.deltaPosition * currentPower;
 
             if (isRolling)
             {
