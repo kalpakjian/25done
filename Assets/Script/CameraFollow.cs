@@ -12,6 +12,7 @@ public class CameraFollow : MonoBehaviour {
 	
 	void Start () {
 		offset = transform.position - target.position;
+		offset *= 2; // Zoom out to make player appear half size
         rb = target.GetComponent<Rigidbody>();
     }
 

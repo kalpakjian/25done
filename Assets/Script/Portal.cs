@@ -7,6 +7,7 @@ public class Portal : MonoBehaviour
     [SerializeField] private GameObject portalVisual;       // The Procedural Portal Effect object
     [SerializeField] private Transform targetPoint;         // Destination position (empty GameObject)
     [SerializeField] private Portal destinationPortal;      // The portal at the destination (optional)
+    [SerializeField] private bool isEndpoint = false;       // Is this an endpoint portal (no teleportation)
 
     [Header("Animation")]
     [SerializeField] private float scaleUpDuration = 1.5f;  // Time to grow from 0 to full size
@@ -114,24 +115,33 @@ public class Portal : MonoBehaviour
     {
         if (!playerTeleported && other.CompareTag("Player"))
         {
-            if (targetPoint == null)
+            if (isEndpoint)
             {
-                Debug.LogError("Target Point is not assigned in Portal script!");
-                return;
+                // Endpoint portal: no teleportation, just mark as reached
+                playerTeleported = true;
+                Debug.Log("Player reached endpoint portal. No teleportation.");
+            }
+            else
+            {
+                if (targetPoint == null)
+                {
+                    Debug.LogError("Target Point is not assigned in Portal script!");
+                    return;
+                }
+
+                playerTeleported = true;
+                Debug.Log("Player entered portal. Teleporting to " + targetPoint.position);
+
+                // Disable CharacterController so we can move the player directly
+                CharacterController cc = other.GetComponent<CharacterController>();
+                if (cc != null) cc.enabled = false;
+
+                other.transform.position = targetPoint.position;
+
+                if (cc != null) cc.enabled = true;
             }
 
-            playerTeleported = true;
-            Debug.Log("Player entered portal. Teleporting to " + targetPoint.position);
-
-            // Disable CharacterController so we can move the player directly
-            CharacterController cc = other.GetComponent<CharacterController>();
-            if (cc != null) cc.enabled = false;
-
-            other.transform.position = targetPoint.position;
-
-            if (cc != null) cc.enabled = true;
-
-            // After teleport: both portals wait, then shrink and disappear
+            // After teleport or reaching endpoint: both portals wait, then shrink and disappear
             StartDisappear();
             if (destinationPortal != null)
             {
