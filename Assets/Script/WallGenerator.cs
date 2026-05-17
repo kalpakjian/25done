@@ -12,6 +12,10 @@ public class WallGenerator : MonoBehaviour
     [Tooltip("如果你的牆模型本身不是以本地 +Z 朝向正面，可在這裡補償 Y 旋轉。0 = 模型正面就是 +Z")]
     public float wallModelYawOffset = 0f;
 
+    [Header("Seed")]
+    public bool useSeed = false;
+    public int seed = 12345;
+
     [Header("Prefabs")]
     public List<GameObject> wallPrefabs = new List<GameObject>();
     public List<GameObject> cornerPrefabs = new List<GameObject>();
@@ -27,28 +31,51 @@ public class WallGenerator : MonoBehaviour
     private List<int> wallBag = new List<int>();
     private int lastWallPrefabIndex = -1;
 
+    [ContextMenu("Generate Room")]
     public void GenerateRoom()
     {
-        ClearChildren();
-        ResetWallBag();
+        Random.State previousRandomState = Random.state;
 
-        if (cornerPrefabs.Count == 0 && wallPrefabs.Count == 0)
+        try
         {
-            Debug.LogWarning("WallGenerator: No prefabs assigned!");
-            return;
+            if (useSeed)
+            {
+                Random.InitState(seed);
+            }
+
+            ClearRoomInternal();
+            ResetWallBag();
+
+            if (cornerPrefabs.Count == 0 && wallPrefabs.Count == 0)
+            {
+                Debug.LogWarning("WallGenerator: No prefabs assigned!");
+                return;
+            }
+
+            debugCorners = GetRoomCornersLocal();
+
+            SpawnCorners();
+
+            SpawnWallEdge(debugCorners[0], debugCorners[1]);
+            SpawnWallEdge(debugCorners[1], debugCorners[2]);
+            SpawnWallEdge(debugCorners[2], debugCorners[3]);
+            SpawnWallEdge(debugCorners[3], debugCorners[0]);
         }
-
-        debugCorners = GetRoomCornersLocal();
-
-        SpawnCorners();
-
-        SpawnWallEdge(debugCorners[0], debugCorners[1]);
-        SpawnWallEdge(debugCorners[1], debugCorners[2]);
-        SpawnWallEdge(debugCorners[2], debugCorners[3]);
-        SpawnWallEdge(debugCorners[3], debugCorners[0]);
+        finally
+        {
+            Random.state = previousRandomState;
+        }
     }
 
-    private void ClearChildren()
+    [ContextMenu("Clear Room")]
+    public void ClearRoom()
+    {
+        ClearRoomInternal();
+        ResetWallBag();
+        debugCorners = new Vector3[0];
+    }
+
+    private void ClearRoomInternal()
     {
         for (int i = transform.childCount - 1; i >= 0; i--)
         {
@@ -85,23 +112,40 @@ public class WallGenerator : MonoBehaviour
 
     private void SpawnCorners()
     {
-        if (cornerPrefabs.Count == 0) return;
+        if (cornerPrefabs == null || cornerPrefabs.Count == 0) return;
 
         float[] cornerRotations = { 0f, -90f, 180f, 90f };
 
         for (int i = 0; i < debugCorners.Length; i++)
         {
-            GameObject prefab = cornerPrefabs[Random.Range(0, cornerPrefabs.Count)];
-            GameObject corner = Instantiate(prefab, transform);
+            GameObject prefab = GetRandomCornerPrefab();
+            if (prefab == null) continue;
 
+            GameObject corner = Instantiate(prefab, transform);
             corner.transform.localPosition = debugCorners[i];
             corner.transform.localRotation = Quaternion.Euler(0f, cornerRotations[i], 0f);
         }
     }
 
+    private GameObject GetRandomCornerPrefab()
+    {
+        List<GameObject> validCorners = new List<GameObject>();
+
+        for (int i = 0; i < cornerPrefabs.Count; i++)
+        {
+            if (cornerPrefabs[i] != null)
+                validCorners.Add(cornerPrefabs[i]);
+        }
+
+        if (validCorners.Count == 0) return null;
+
+        int index = Random.Range(0, validCorners.Count);
+        return validCorners[index];
+    }
+
     private void SpawnWallEdge(Vector3 start, Vector3 end)
     {
-        if (wallPrefabs.Count == 0) return;
+        if (wallPrefabs == null || wallPrefabs.Count == 0) return;
 
         float distance = Vector3.Distance(start, end);
         int segmentCount = Mathf.Max(1, Mathf.FloorToInt(distance / wallSpacing));
@@ -118,7 +162,7 @@ public class WallGenerator : MonoBehaviour
             Vector3 pos = Vector3.Lerp(start, end, t);
 
             GameObject prefab = GetWallPrefabFromBag();
-            if (prefab == null) return;
+            if (prefab == null) continue;
 
             GameObject wall = Instantiate(prefab, transform);
             wall.transform.localPosition = pos;
@@ -131,15 +175,25 @@ public class WallGenerator : MonoBehaviour
         if (wallPrefabs == null || wallPrefabs.Count == 0)
             return null;
 
-        if (wallPrefabs.Count == 1)
+        List<int> validIndices = new List<int>();
+        for (int i = 0; i < wallPrefabs.Count; i++)
         {
-            lastWallPrefabIndex = 0;
-            return wallPrefabs[0];
+            if (wallPrefabs[i] != null)
+                validIndices.Add(i);
+        }
+
+        if (validIndices.Count == 0)
+            return null;
+
+        if (validIndices.Count == 1)
+        {
+            lastWallPrefabIndex = validIndices[0];
+            return wallPrefabs[validIndices[0]];
         }
 
         if (wallBag.Count == 0)
         {
-            RefillAndShuffleWallBag();
+            RefillAndShuffleWallBag(validIndices);
         }
 
         int pickedIndex = wallBag[0];
@@ -149,14 +203,13 @@ public class WallGenerator : MonoBehaviour
         return wallPrefabs[pickedIndex];
     }
 
-    private void RefillAndShuffleWallBag()
+    private void RefillAndShuffleWallBag(List<int> validIndices)
     {
         wallBag.Clear();
 
-        for (int i = 0; i < wallPrefabs.Count; i++)
+        for (int i = 0; i < validIndices.Count; i++)
         {
-            if (wallPrefabs[i] != null)
-                wallBag.Add(i);
+            wallBag.Add(validIndices[i]);
         }
 
         for (int i = wallBag.Count - 1; i > 0; i--)
