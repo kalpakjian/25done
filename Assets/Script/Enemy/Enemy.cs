@@ -39,7 +39,7 @@ public class Enemy : MonoBehaviour {
 
 	public UnityEvent dieEvent;
 
-	protected void start () {
+	protected virtual void start () {
 
 		var transforms = GetComponentsInChildren<Transform>();
 		foreach (var tran in transforms)
@@ -75,7 +75,7 @@ public class Enemy : MonoBehaviour {
 		}
 	}
 
-	protected void update () {
+	protected virtual void update () {
 		playerDist = Vector3.Distance(Player.position, transform.position);
 
 		if (playerDist < attackRange)
@@ -99,7 +99,7 @@ public class Enemy : MonoBehaviour {
 		}
 	}
 
-	protected void lateUpdate()
+	protected virtual void lateUpdate()
 	{
 		NM.nextPosition = transform.position;
 
