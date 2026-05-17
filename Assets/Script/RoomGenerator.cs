@@ -1,14 +1,17 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class WallGenerator : MonoBehaviour
+public class RoomGenerator : MonoBehaviour
 {
-    [Header("Room Dimensions")]
-    public float roomWidth = 10f;
-    public float roomLength = 10f;
-    public float wallSpacing = 2f;
+    [Header("Floor Grid")]
+    public GameObject floorPrefab;
+    public int floorCountX = 8;
+    public int floorCountZ = 6;
+    public float tileSpacingX = 1f;
+    public float tileSpacingZ = 1f;
 
-    [Header("Model Orientation")]
+    [Header("Walls")]
+    public float wallSpacing = 1f;
     [Tooltip("如果你的牆模型本身不是以本地 +Z 朝向正面，可在這裡補償 Y 旋轉。0 = 模型正面就是 +Z")]
     public float wallModelYawOffset = 0f;
 
@@ -20,10 +23,15 @@ public class WallGenerator : MonoBehaviour
     public List<GameObject> wallPrefabs = new List<GameObject>();
     public List<GameObject> cornerPrefabs = new List<GameObject>();
 
+    [Header("Roots")]
+    public Transform floorRoot;
+    public Transform wallRoot;
+
     [Header("Debug")]
     public bool drawGizmos = true;
     public bool drawCornerLabels = true;
     public bool drawWallNormals = true;
+    public bool drawFloorBounds = true;
 
     private Vector3[] debugCorners = new Vector3[0];
 
@@ -38,23 +46,22 @@ public class WallGenerator : MonoBehaviour
         try
         {
             if (useSeed)
-            {
                 Random.InitState(seed);
-            }
 
+            EnsureRoots();
             ClearRoomInternal();
             ResetWallBag();
 
-            if (cornerPrefabs.Count == 0 && wallPrefabs.Count == 0)
+            if (floorPrefab == null && wallPrefabs.Count == 0 && cornerPrefabs.Count == 0)
             {
-                Debug.LogWarning("WallGenerator: No prefabs assigned!");
+                Debug.LogWarning("RoomGenerator: No floorPrefab, wallPrefabs, or cornerPrefabs assigned!");
                 return;
             }
 
             debugCorners = GetRoomCornersLocal();
 
+            GenerateFloor();
             SpawnCorners();
-
             SpawnWallEdge(debugCorners[0], debugCorners[1]);
             SpawnWallEdge(debugCorners[1], debugCorners[2]);
             SpawnWallEdge(debugCorners[2], debugCorners[3]);
@@ -69,6 +76,7 @@ public class WallGenerator : MonoBehaviour
     [ContextMenu("Clear Room")]
     public void ClearRoom()
     {
+        EnsureRoots();
         ClearRoomInternal();
         ResetWallBag();
         debugCorners = new Vector3[0];
@@ -77,7 +85,10 @@ public class WallGenerator : MonoBehaviour
     [ContextMenu("Bake Room")]
     public void BakeRoom()
     {
-        if (transform.childCount == 0)
+        EnsureRoots();
+
+        if ((floorRoot == null || floorRoot.childCount == 0) &&
+            (wallRoot == null || wallRoot.childCount == 0))
         {
             GenerateRoom();
         }
@@ -91,11 +102,48 @@ public class WallGenerator : MonoBehaviour
         #endif
     }
 
+    private void EnsureRoots()
+    {
+        if (floorRoot == null)
+        {
+            Transform existing = transform.Find("FloorRoot");
+            if (existing != null)
+                floorRoot = existing;
+            else
+            {
+                GameObject go = new GameObject("FloorRoot");
+                go.transform.SetParent(transform, false);
+                floorRoot = go.transform;
+            }
+        }
+
+        if (wallRoot == null)
+        {
+            Transform existing = transform.Find("WallRoot");
+            if (existing != null)
+                wallRoot = existing;
+            else
+            {
+                GameObject go = new GameObject("WallRoot");
+                go.transform.SetParent(transform, false);
+                wallRoot = go.transform;
+            }
+        }
+    }
+
     private void ClearRoomInternal()
     {
-        for (int i = transform.childCount - 1; i >= 0; i--)
+        ClearChildrenOf(floorRoot);
+        ClearChildrenOf(wallRoot);
+    }
+
+    private void ClearChildrenOf(Transform root)
+    {
+        if (root == null) return;
+
+        for (int i = root.childCount - 1; i >= 0; i--)
         {
-            GameObject child = transform.GetChild(i).gameObject;
+            GameObject child = root.GetChild(i).gameObject;
 
             if (Application.isPlaying)
                 Destroy(child);
@@ -110,20 +158,43 @@ public class WallGenerator : MonoBehaviour
         lastWallPrefabIndex = -1;
     }
 
+    private void GenerateFloor()
+    {
+        if (floorPrefab == null) return;
+
+        for (int x = 0; x < floorCountX; x++)
+        {
+            for (int z = 0; z < floorCountZ; z++)
+            {
+                Vector3 localPos = new Vector3(x * tileSpacingX, 0f, z * tileSpacingZ);
+                GameObject tile = Instantiate(floorPrefab, floorRoot);
+                tile.transform.localPosition = localPos;
+                tile.transform.localRotation = Quaternion.identity;
+            }
+        }
+    }
+
     private Vector3[] GetRoomCornersLocal()
     {
+        float minX = -tileSpacingX * 0.5f;
+        float minZ = -tileSpacingZ * 0.5f;
+        float maxX = (floorCountX - 0.5f) * tileSpacingX;
+        float maxZ = (floorCountZ - 0.5f) * tileSpacingZ;
+
         return new Vector3[]
         {
-            new Vector3(0f, 0f, 0f),
-            new Vector3(roomWidth, 0f, 0f),
-            new Vector3(roomWidth, 0f, roomLength),
-            new Vector3(0f, 0f, roomLength)
+            new Vector3(minX, 0f, minZ),
+            new Vector3(maxX, 0f, minZ),
+            new Vector3(maxX, 0f, maxZ),
+            new Vector3(minX, 0f, maxZ)
         };
     }
 
     private Vector3 GetRoomCenterLocal()
     {
-        return new Vector3(roomWidth * 0.5f, 0f, roomLength * 0.5f);
+        float centerX = ((floorCountX - 1) * tileSpacingX) * 0.5f;
+        float centerZ = ((floorCountZ - 1) * tileSpacingZ) * 0.5f;
+        return new Vector3(centerX, 0f, centerZ);
     }
 
     private void SpawnCorners()
@@ -137,7 +208,7 @@ public class WallGenerator : MonoBehaviour
             GameObject prefab = GetRandomCornerPrefab();
             if (prefab == null) continue;
 
-            GameObject corner = Instantiate(prefab, transform);
+            GameObject corner = Instantiate(prefab, wallRoot);
             corner.transform.localPosition = debugCorners[i];
             corner.transform.localRotation = Quaternion.Euler(0f, cornerRotations[i], 0f);
         }
@@ -167,7 +238,6 @@ public class WallGenerator : MonoBehaviour
         int segmentCount = Mathf.Max(1, Mathf.FloorToInt(distance / wallSpacing));
 
         Vector3 inwardNormal = GetInwardNormal(start, end);
-
         Quaternion baseRotation = Quaternion.LookRotation(inwardNormal, Vector3.up);
         Quaternion modelOffsetRotation = Quaternion.Euler(0f, wallModelYawOffset, 0f);
         Quaternion finalRotation = baseRotation * modelOffsetRotation;
@@ -180,7 +250,7 @@ public class WallGenerator : MonoBehaviour
             GameObject prefab = GetWallPrefabFromBag();
             if (prefab == null) continue;
 
-            GameObject wall = Instantiate(prefab, transform);
+            GameObject wall = Instantiate(prefab, wallRoot);
             wall.transform.localPosition = pos;
             wall.transform.localRotation = finalRotation;
         }
@@ -224,9 +294,7 @@ public class WallGenerator : MonoBehaviour
         wallBag.Clear();
 
         for (int i = 0; i < validIndices.Count; i++)
-        {
             wallBag.Add(validIndices[i]);
-        }
 
         for (int i = wallBag.Count - 1; i > 0; i--)
         {
@@ -254,9 +322,7 @@ public class WallGenerator : MonoBehaviour
         Vector3 toCenter = (GetRoomCenterLocal() - edgeMid).normalized;
 
         if (Vector3.Dot(candidateNormal, toCenter) < 0f)
-        {
             candidateNormal = -candidateNormal;
-        }
 
         return candidateNormal;
     }
@@ -268,24 +334,27 @@ public class WallGenerator : MonoBehaviour
 
         Vector3[] corners = GetRoomCornersLocal();
 
+        if (drawFloorBounds)
+        {
+            Gizmos.color = Color.green;
+            for (int i = 0; i < corners.Length; i++)
+            {
+                Vector3 a = transform.TransformPoint(corners[i]);
+                Vector3 b = transform.TransformPoint(corners[(i + 1) % corners.Length]);
+                Gizmos.DrawLine(a, b);
+            }
+        }
+
         Gizmos.color = Color.red;
         for (int i = 0; i < corners.Length; i++)
         {
             Vector3 worldPos = transform.TransformPoint(corners[i]);
-            Gizmos.DrawSphere(worldPos, 0.15f);
-        }
-
-        Gizmos.color = Color.white;
-        for (int i = 0; i < corners.Length; i++)
-        {
-            Vector3 a = transform.TransformPoint(corners[i]);
-            Vector3 b = transform.TransformPoint(corners[(i + 1) % corners.Length]);
-            Gizmos.DrawLine(a, b);
+            Gizmos.DrawSphere(worldPos, 0.12f);
         }
 
         Vector3 roomCenterWorld = transform.TransformPoint(GetRoomCenterLocal());
         Gizmos.color = Color.yellow;
-        Gizmos.DrawSphere(roomCenterWorld, 0.12f);
+        Gizmos.DrawSphere(roomCenterWorld, 0.1f);
 
         if (drawWallNormals)
         {
@@ -298,7 +367,7 @@ public class WallGenerator : MonoBehaviour
                 Vector3 normal = GetInwardNormal(start, end);
 
                 Vector3 worldMid = transform.TransformPoint(mid);
-                Vector3 worldNormalEnd = transform.TransformPoint(mid + normal * 1.2f);
+                Vector3 worldNormalEnd = transform.TransformPoint(mid + normal * 1.0f);
 
                 Gizmos.color = Color.cyan;
                 Gizmos.DrawLine(worldMid, worldNormalEnd);
@@ -310,10 +379,10 @@ public class WallGenerator : MonoBehaviour
             for (int i = 0; i < corners.Length; i++)
             {
                 Vector3 worldPos = transform.TransformPoint(corners[i]);
-                UnityEditor.Handles.Label(worldPos + Vector3.up * 0.25f, $"Corner {i + 1}");
+                UnityEditor.Handles.Label(worldPos + Vector3.up * 0.2f, $"Corner {i + 1}");
             }
 
-            UnityEditor.Handles.Label(roomCenterWorld + Vector3.up * 0.25f, "Center");
+            UnityEditor.Handles.Label(roomCenterWorld + Vector3.up * 0.2f, "Center");
         }
     }
 #endif
