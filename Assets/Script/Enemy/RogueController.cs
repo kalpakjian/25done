@@ -10,6 +10,8 @@ public class RogueController : Enemy
     void Start()
     {
         start();
+        // Let NavMeshAgent drive position for Rogue (no root motion)
+        NM.updatePosition = true;
     }
 
     void Update()
@@ -19,7 +21,11 @@ public class RogueController : Enemy
 
     void LateUpdate()
     {
-        lateUpdate();
+        // Override: skip NM.nextPosition sync so NavMeshAgent can move freely
+        if (AllowRotate)
+            NM.updateRotation = true;
+        else
+            NM.updateRotation = false;
     }
 
     protected override void update()

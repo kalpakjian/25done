@@ -15,6 +15,7 @@ public class EnemyAttack : StateMachineBehaviour {
 	}
 
 	override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
+		if (weapon == null) return;
 		if (stateInfo.normalizedTime > start
 							&& stateInfo.normalizedTime < end)
 			weapon.attackDamage = damage * enemy.power;
@@ -23,6 +24,7 @@ public class EnemyAttack : StateMachineBehaviour {
 	}
 
 	override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
+		if (weapon == null) return;
 		weapon.attackDamage = 0;
 	}
 }
