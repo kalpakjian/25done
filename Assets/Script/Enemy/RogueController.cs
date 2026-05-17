@@ -26,45 +26,43 @@ public class RogueController : Enemy
     {
         playerDist = Vector3.Distance(Player.position, transform.position);
 
-        // 1. Attack Logic: If player is within attackRange, stay at maintainDistance
-        if (playerDist < attackRange)
-        {
-            anim.SetBool("walk", false);
-            
-            // Implement "won't approach player" by moving to a point at 'maintainDistance'
-            Vector3 directionToPlayer = (Player.position - transform.position).normalized;
-            Vector3 targetPosition = transform.position + (directionToPlayer * maintainDistance);
+        float stopThreshold = 0.5f;
 
-            // Ensure we don't overshoot the player
-            if (playerDist < maintainDistance)
-            {
-                // If too close, move back to maintain distance
-                Vector3 backPosition = transform.position - (directionToPlayer * 0.5f);
-                NM.SetDestination(backPosition);
-            }
-            else
-            {
-                // Move to the perimeter of the attack range
-                NM.SetDestination(targetPosition);
-            }
-
-            if (Time.time >= nextAttackTime)
-            {
-                anim.SetTrigger("attack");
-                nextAttackTime = Time.time + attackInterval;
-            }
-        }
-        // 2. Trace Logic: If player is within traceRange but outside attackRange
-        else if (playerDist < traceRange)
+        // Movement logic
+        if (playerDist < maintainDistance)
         {
-            NM.SetDestination(Player.position);
+            // Player is too close — retreat away from player
+            Vector3 directionAway = (transform.position - Player.position).normalized;
+            Vector3 retreatTarget = Player.position + directionAway * (maintainDistance + 1f);
+            NM.SetDestination(retreatTarget);
             anim.SetBool("walk", true);
         }
-        // 3. Idle Logic: Player is too far
-        else
+        else if (playerDist < maintainDistance + stopThreshold)
         {
+            // At preferred distance — hold position
             anim.SetBool("walk", false);
             NM.SetDestination(transform.position);
+        }
+        else if (playerDist < traceRange)
+        {
+            // Within trace range but too far — approach to maintainDistance
+            Vector3 dirToPlayer = (Player.position - transform.position).normalized;
+            Vector3 approachTarget = Player.position - dirToPlayer * maintainDistance;
+            NM.SetDestination(approachTarget);
+            anim.SetBool("walk", true);
+        }
+        else
+        {
+            // Player is too far — idle
+            anim.SetBool("walk", false);
+            NM.SetDestination(transform.position);
+        }
+
+        // Attack from maintainDistance (ranged attacker)
+        if (playerDist < maintainDistance + stopThreshold && Time.time >= nextAttackTime)
+        {
+            anim.SetTrigger("attack");
+            nextAttackTime = Time.time + attackInterval;
         }
     }
 }
