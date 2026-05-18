@@ -23,8 +23,12 @@ public class RogueController : Enemy
     [Tooltip("箭矢傷害倍率（會乘以 power）")]
     public float arrowDamageMultiplier = 1f;
 
+    [Tooltip("射箭動作鎖定移動的時間（秒），建議與射箭動畫長度相近")]
+    public float attackLockTime = 1.0f;
+
     private int currentArrows;
     private bool isReloading = false;
+    private bool isAttacking = false;
 
     void Start()
     {
@@ -50,7 +54,18 @@ public class RogueController : Enemy
 
     protected override void update()
     {
+        // 死亡後停止所有行為
+        if (dead) return;
+
         playerDist = Vector3.Distance(Player.position, transform.position);
+
+        // 射箭或上膛時，原地鎖定不移動
+        if (isAttacking || isReloading)
+        {
+            NM.SetDestination(transform.position);
+            anim.SetBool("walk", false);
+            return;
+        }
 
         float stopThreshold = 0.5f;
 
@@ -92,6 +107,8 @@ public class RogueController : Enemy
                 // 有箭 → 播放射箭動畫（動畫事件會呼叫 ShootArrow）
                 anim.SetTrigger("attack");
                 nextAttackTime = Time.time + attackInterval;
+                isAttacking = true;
+                Invoke(nameof(OnAttackEnd), attackLockTime);
             }
             else if (!isReloading)
             {
@@ -136,9 +153,15 @@ public class RogueController : Enemy
     // ─────────────────────────────────────────────
     //  上膛（裝填箭矢）
     // ─────────────────────────────────────────────
+    void OnAttackEnd()
+    {
+        isAttacking = false;
+    }
+
     void StartReload()
     {
         isReloading = true;
+        reloadStartTime = Time.time;        // 記錄開始時間，用於顯示倒數
         anim.SetTrigger("reload");          // 播放上膛/裝填動畫（若有）
         Invoke(nameof(FinishReload), reloadTime);
     }
@@ -147,5 +170,51 @@ public class RogueController : Enemy
     {
         currentArrows = maxArrows;
         isReloading = false;
+    }
+
+    // ─────────────────────────────────────────────
+    //  在怪物頭頂顯示上膛狀態文字（僅 Debug 用途）
+    // ─────────────────────────────────────────────
+    void OnGUI()
+    {
+        if (dead) return;
+        if (Camera.main == null) return;
+
+        Vector3 worldPos = transform.position + Vector3.up * 2.5f;
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPos);
+
+        // 物體在攝影機後面則不顯示
+        if (screenPos.z < 0) return;
+
+        // Unity GUI 的 Y 軸是反的
+        float guiY = Screen.height - screenPos.y;
+        float w = 220f, h = 28f;
+
+        GUIStyle style = new GUIStyle(GUI.skin.label);
+        style.fontSize = 16;
+        style.fontStyle = FontStyle.Bold;
+        style.alignment = TextAnchor.MiddleCenter;
+
+        // ── 第一行：箭矢數量（常態顯示）──
+        string arrowLabel = $"🏹 箭矢：{currentArrows} / {maxArrows}";
+        style.normal.textColor = currentArrows > 0 ? Color.white : Color.red;
+        GUI.Label(new Rect(screenPos.x - w / 2f, guiY - h - 2f, w, h), arrowLabel, style);
+
+        // ── 第二行：上膛倒數（僅上膛中顯示）──
+        if (isReloading)
+        {
+            float remaining = CancelInvoke_GetRemaining();
+            string reloadLabel = $"🔄 上膛中... ({remaining:F1}s)";
+            style.normal.textColor = Color.yellow;
+            GUI.Label(new Rect(screenPos.x - w / 2f, guiY + 2f, w, h), reloadLabel, style);
+        }
+    }
+
+    // 計算 FinishReload Invoke 剩餘秒數（用 reloadStartTime 追蹤）
+    private float reloadStartTime = 0f;
+    float CancelInvoke_GetRemaining()
+    {
+        float remaining = reloadTime - (Time.time - reloadStartTime);
+        return Mathf.Clamp(remaining, 0f, reloadTime);
     }
 }
