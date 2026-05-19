@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class PlayerWeapon : MonoBehaviour {
 
@@ -9,13 +9,17 @@ public class PlayerWeapon : MonoBehaviour {
 	public AttackType type;
 	[HideInInspector]
 	public int strength;
+	[HideInInspector]
+	public bool canPushEnemy;
 
 	Transform player;
+	PlayerController controller;
 
 	Attack attack = new Attack();
 
 	void Start() {
 		player = GameObject.FindWithTag("Player").transform;
+		controller = player.GetComponent<PlayerController>();
 	}
 
 	void OnTriggerEnter (Collider col) {
@@ -30,12 +34,14 @@ public class PlayerWeapon : MonoBehaviour {
 			attack.position = player.position;
 			attack.type = type;
 			attack.strength = strength;
+			attack.canPushEnemy = canPushEnemy;
 
 			col.SendMessage("Hurt", attack);
+
+			if (controller != null)
+				controller.RegisterAttackHit();
 		}
 
 
 	}
 }
-
-

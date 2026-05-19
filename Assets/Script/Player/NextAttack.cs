@@ -10,7 +10,7 @@ public class NextAttack : StateMachineBehaviour {
 	}
 
 	override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
-		if (stateInfo.normalizedTime > nextAttackTime)
+		if (stateInfo.normalizedTime > nextAttackTime && controller.CurrentAttackHit)
 			controller.NextAttack = true;
 		else
 			controller.NextAttack = false;

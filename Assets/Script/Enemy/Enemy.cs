@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.AI;
 using System.Collections.Generic;
 using UnityEngine.UI;
@@ -129,9 +129,12 @@ public class Enemy : MonoBehaviour {
 			}
 			anim.SetTrigger("hurt");
 
-			Vector3 pushBack = (transform.position - attack.position).normalized;
-			pushBack *= attack.strength;
-			GetComponent<Rigidbody>().AddForce(pushBack * 10, ForceMode.Impulse);
+			if (attack.canPushEnemy)
+			{
+				Vector3 pushBack = (transform.position - attack.position).normalized;
+				pushBack *= attack.strength;
+				GetComponent<Rigidbody>().AddForce(pushBack * 10, ForceMode.Impulse);
+			}
 
 			if (attack.type == AttackType.frozen)
 			{
@@ -184,4 +187,3 @@ public class Enemy : MonoBehaviour {
     }
 
 }
-

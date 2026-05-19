@@ -26,9 +26,28 @@ public class RogueController : Enemy
     [Tooltip("射箭動作鎖定移動的時間（秒），建議與射箭動畫長度相近")]
     public float attackLockTime = 1.0f;
 
+    [Tooltip("真正 attack 開始後，延遲幾秒自動射箭。若新 attack 動畫沒有 ShootArrow Event，這個會負責射箭。")]
+    public float arrowReleaseDelay = 0.25f;
+
+    [Header("Aiming Settings")]
+    [Tooltip("射箭前瞄準動作所需秒數，完成後才會真正播放攻擊動畫")]
+    public float aimTime = 0.6f;
+
+    [Tooltip("瞄準期間轉向玩家的速度")]
+    public float aimTurnSpeed = 10f;
+
+    [Tooltip("進入瞄準狀態使用的 Animator Trigger。若你把原本 attack 狀態改成 aiming，這裡保持 attack 即可。")]
+    public string aimingTriggerName = "attack";
+
+    [Tooltip("瞄準完成後要觸發的新攻擊 Animator Trigger。若 aiming 會用 Exit Time 自動轉到新 attack，這裡留空。")]
+    public string attackTriggerName = "";
+
     private int currentArrows;
+    private bool isAiming = false;
     private bool isReloading = false;
     private bool isAttacking = false;
+    private bool hasShotThisAttack = false;
+    private Vector3 lockedAttackDirection = Vector3.forward;
 
     void Start()
     {
@@ -59,13 +78,16 @@ public class RogueController : Enemy
 
         playerDist = Vector3.Distance(Player.position, transform.position);
 
-        // 射箭或上膛時，原地鎖定不移動
-        if (isAttacking || isReloading)
+        // 瞄準、射箭或上膛時，原地鎖定不移動
+        if (isAiming || isAttacking || isReloading)
         {
-            NM.SetDestination(transform.position);
+            StopMoving();
             anim.SetBool("walk", false);
             return;
         }
+
+        if (NM != null && NM.isOnNavMesh)
+            NM.isStopped = false;
 
         float stopThreshold = 0.5f;
 
@@ -104,11 +126,8 @@ public class RogueController : Enemy
         {
             if (currentArrows > 0)
             {
-                // 有箭 → 播放射箭動畫（動畫事件會呼叫 ShootArrow）
-                anim.SetTrigger("attack");
-                nextAttackTime = Time.time + attackInterval;
-                isAttacking = true;
-                Invoke(nameof(OnAttackEnd), attackLockTime);
+                // 有箭 → 先播放瞄準動作，瞄準完成後才射箭
+                StartAiming();
             }
             else if (!isReloading)
             {
@@ -121,8 +140,60 @@ public class RogueController : Enemy
     // ─────────────────────────────────────────────
     //  射箭 – 由 Animation Event 在動畫適當幀呼叫
     // ─────────────────────────────────────────────
+    void StartAiming()
+    {
+        isAiming = true;
+        StopMoving();
+        LockAttackDirection();
+
+        if (!string.IsNullOrEmpty(attackTriggerName))
+            anim.ResetTrigger(attackTriggerName);
+
+        if (!string.IsNullOrEmpty(aimingTriggerName))
+            anim.SetTrigger(aimingTriggerName);
+
+        Invoke(nameof(FinishAiming), aimTime);
+    }
+
+    void FinishAiming()
+    {
+        if (dead)
+            return;
+
+        isAiming = false;
+
+        if (currentArrows <= 0)
+        {
+            StartReload();
+            return;
+        }
+
+        StopMoving();
+        transform.rotation = Quaternion.LookRotation(lockedAttackDirection);
+
+        // 瞄準完成 → 進入真正射箭階段。
+        // 若 attackTriggerName 留空，代表 Animator 會由 aiming 的 Exit Time 自動轉到新 attack。
+        if (!string.IsNullOrEmpty(attackTriggerName))
+            anim.SetTrigger(attackTriggerName);
+
+        nextAttackTime = Time.time + attackInterval;
+        isAttacking = true;
+        hasShotThisAttack = false;
+        Invoke(nameof(ShootArrowFromAttack), arrowReleaseDelay);
+        Invoke(nameof(OnAttackEnd), attackLockTime);
+    }
+
+    void ShootArrowFromAttack()
+    {
+        if (!isAttacking || hasShotThisAttack)
+            return;
+
+        ShootArrow();
+    }
+
     public void ShootArrow()
     {
+        if (hasShotThisAttack) return;
         if (currentArrows <= 0) return;
         if (arrowPrefab == null)
         {
@@ -131,9 +202,11 @@ public class RogueController : Enemy
         }
 
         Vector3 spawnPos = firePoint != null ? firePoint.position : transform.position + Vector3.up;
-        Vector3 dir = (Player.position - spawnPos).normalized;
+        Vector3 dir = lockedAttackDirection;
 
         GameObject arrowObj = Instantiate(arrowPrefab, spawnPos, Quaternion.LookRotation(dir));
+        hasShotThisAttack = true;
+
         Arrow arrow = arrowObj.GetComponent<Arrow>();
         if (arrow != null)
         {
@@ -156,6 +229,32 @@ public class RogueController : Enemy
     void OnAttackEnd()
     {
         isAttacking = false;
+        CancelInvoke(nameof(ShootArrowFromAttack));
+    }
+
+    void LockAttackDirection()
+    {
+        if (Player != null)
+        {
+            lockedAttackDirection = Player.position - transform.position;
+            lockedAttackDirection.y = 0f;
+        }
+
+        if (lockedAttackDirection.sqrMagnitude <= 0.001f)
+            lockedAttackDirection = transform.forward;
+
+        lockedAttackDirection.Normalize();
+        transform.rotation = Quaternion.LookRotation(lockedAttackDirection);
+    }
+
+    void StopMoving()
+    {
+        if (NM == null || !NM.isOnNavMesh)
+            return;
+
+        NM.isStopped = true;
+        NM.velocity = Vector3.zero;
+        NM.SetDestination(transform.position);
     }
 
     void StartReload()

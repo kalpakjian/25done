@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 
 public class BossController : Enemy {
@@ -31,9 +31,12 @@ public class BossController : Enemy {
 			}
 			AS.PlayOneShot(hurtSound);
 
-			Vector3 pushBack = (transform.position - attack.position).normalized;
-			pushBack *= attack.strength;
-			GetComponent<Rigidbody>().AddForce(pushBack * 10, ForceMode.Impulse);
+			if (attack.canPushEnemy)
+			{
+				Vector3 pushBack = (transform.position - attack.position).normalized;
+				pushBack *= attack.strength;
+				GetComponent<Rigidbody>().AddForce(pushBack * 10, ForceMode.Impulse);
+			}
 
 			if (attack.type == AttackType.frozen)
 			{
@@ -54,4 +57,3 @@ public class BossController : Enemy {
 		lateUpdate();
 	}
 }
-

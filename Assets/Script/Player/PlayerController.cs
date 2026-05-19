@@ -26,6 +26,8 @@ public class PlayerController : MonoBehaviour
 
     [HideInInspector] public bool AllowRotate = true;
     [HideInInspector] public bool NextAttack = true;
+    [HideInInspector] public bool CurrentAttackHit = false;
+    [HideInInspector] public int CurrentAttackStep = 0;
 
     private Animator anim;
 
@@ -163,6 +165,11 @@ public class PlayerController : MonoBehaviour
 
         anim.ResetTrigger("attack");
         anim.SetTrigger("attack");
+    }
+
+    public void RegisterAttackHit()
+    {
+        CurrentAttackHit = true;
     }
 
     void TryRoll()
