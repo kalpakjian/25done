@@ -28,8 +28,20 @@ public class Portal : MonoBehaviour
         if (portalVisual != null)
         {
             originalScale = portalVisual.transform.localScale;
+
+            // 防止 Prefab 被儲存時縮放已是零，導致 ScaleUp 無效（Build 常見問題）
+            if (originalScale == Vector3.zero)
+            {
+                originalScale = Vector3.one;
+                Debug.LogWarning($"[Portal] {gameObject.name} 的 portalVisual 初始縮放為零，已自動重設為 Vector3.one。請檢查 Prefab 設定。");
+            }
+
             portalVisual.transform.localScale = Vector3.zero;
             portalVisual.SetActive(false);
+        }
+        else
+        {
+            Debug.LogWarning($"[Portal] {gameObject.name} 的 portalVisual 未指定！請在 Inspector 中設定。");
         }
     }
 
@@ -42,8 +54,14 @@ public class Portal : MonoBehaviour
         if (portalVisual != null)
         {
             portalVisual.SetActive(true);
+            // 確保 originalScale 有效（防禦性檢查）
+            if (originalScale == Vector3.zero) originalScale = Vector3.one;
             StartCoroutine(ScaleUp());
-            Debug.Log("Portal is appearing!");
+            Debug.Log($"[Portal] {gameObject.name} is appearing! originalScale={originalScale}");
+        }
+        else
+        {
+            Debug.LogError($"[Portal] {gameObject.name} ActivatePortal 呼叫時 portalVisual 為 null！");
         }
 
         // Also activate the destination portal
@@ -61,8 +79,13 @@ public class Portal : MonoBehaviour
         if (portalVisual != null)
         {
             portalVisual.SetActive(true);
+            if (originalScale == Vector3.zero) originalScale = Vector3.one;
             StartCoroutine(ScaleUp());
-            Debug.Log("Destination portal is appearing!");
+            Debug.Log($"[Portal] {gameObject.name} (destination) is appearing!");
+        }
+        else
+        {
+            Debug.LogError($"[Portal] {gameObject.name} ActivateAsDestination 呼叫時 portalVisual 為 null！");
         }
     }
 
