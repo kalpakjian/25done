@@ -27,10 +27,13 @@ public class CameraObstructionFader_ModularWalls : MonoBehaviour
     private readonly Dictionary<Renderer, FadeData> _faders = new Dictionary<Renderer, FadeData>();
     private readonly HashSet<Renderer> _hitThisFrame = new HashSet<Renderer>();
     private readonly List<Renderer> _cleanupList = new List<Renderer>();
+    private static Shader _transparentFadeShader;
 
     private class FadeData
     {
         public Material[] materials;
+        public Shader[] originalShaders;
+        public int[] originalRenderQueues;
         public Color[] originalColors;
         public float[] currentAlpha;
         public float[] targetAlpha;
@@ -178,6 +181,8 @@ public class CameraObstructionFader_ModularWalls : MonoBehaviour
         FadeData data = new FadeData
         {
             materials = mats,
+            originalShaders = new Shader[mats.Length],
+            originalRenderQueues = new int[mats.Length],
             originalColors = new Color[mats.Length],
             currentAlpha = new float[mats.Length],
             targetAlpha = new float[mats.Length]
@@ -188,9 +193,13 @@ public class CameraObstructionFader_ModularWalls : MonoBehaviour
             Material mat = mats[i];
             if (mat == null) continue;
 
-            SetupMaterialForFade(mat);
+            data.originalShaders[i] = mat.shader;
+            data.originalRenderQueues[i] = mat.renderQueue;
 
             Color color = GetMaterialColor(mat);
+            SetupMaterialForFade(mat);
+            SetMaterialColor(mat, color);
+
             data.originalColors[i] = color;
             data.currentAlpha[i] = color.a;
             data.targetAlpha[i] = color.a;
@@ -254,7 +263,7 @@ public class CameraObstructionFader_ModularWalls : MonoBehaviour
 
             if (data.originalColors[i].a >= 0.99f)
             {
-                SetupMaterialOpaque(mat);
+                RestoreOriginalMaterial(mat, data.originalShaders[i], data.originalRenderQueues[i]);
             }
         }
 
@@ -263,11 +272,17 @@ public class CameraObstructionFader_ModularWalls : MonoBehaviour
 
     Color GetMaterialColor(Material mat)
     {
+        if (mat.HasProperty("_BaseColor"))
+            return mat.GetColor("_BaseColor");
+
         return mat.HasProperty("_Color") ? mat.color : Color.white;
     }
 
     void SetMaterialColor(Material mat, Color color)
     {
+        if (mat.HasProperty("_BaseColor"))
+            mat.SetColor("_BaseColor", color);
+
         if (mat.HasProperty("_Color"))
             mat.color = color;
     }
@@ -275,6 +290,34 @@ public class CameraObstructionFader_ModularWalls : MonoBehaviour
     void SetupMaterialForFade(Material mat)
     {
         if (mat == null) return;
+
+        Shader fadeShader = GetTransparentFadeShader();
+        if (fadeShader != null)
+        {
+            Texture mainTexture = GetKnownMainTexture(mat);
+            mat.shader = fadeShader;
+            if (mainTexture != null && mat.HasProperty("_MainTex"))
+                mat.SetTexture("_MainTex", mainTexture);
+            if (mainTexture != null && mat.HasProperty("_BaseMap"))
+                mat.SetTexture("_BaseMap", mainTexture);
+            mat.renderQueue = 3000;
+            return;
+        }
+
+        if (IsURPMaterial(mat))
+        {
+            mat.SetFloat("_Surface", 1f);
+            mat.SetFloat("_Blend", 0f);
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetInt("_ZWrite", 0);
+            mat.DisableKeyword("_ALPHATEST_ON");
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            mat.renderQueue = 3000;
+            return;
+        }
+
         if (mat.shader.name != "Standard") return;
 
         mat.SetFloat("_Mode", 2f);
@@ -287,9 +330,35 @@ public class CameraObstructionFader_ModularWalls : MonoBehaviour
         mat.renderQueue = 3000;
     }
 
+    void RestoreOriginalMaterial(Material mat, Shader originalShader, int originalRenderQueue)
+    {
+        if (mat == null) return;
+
+        if (originalShader != null)
+            mat.shader = originalShader;
+
+        mat.renderQueue = originalRenderQueue;
+
+        SetupMaterialOpaque(mat);
+    }
+
     void SetupMaterialOpaque(Material mat)
     {
         if (mat == null) return;
+
+        if (IsURPMaterial(mat))
+        {
+            mat.SetFloat("_Surface", 0f);
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+            mat.SetInt("_ZWrite", 1);
+            mat.DisableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.DisableKeyword("_ALPHATEST_ON");
+            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            mat.renderQueue = -1;
+            return;
+        }
+
         if (mat.shader.name != "Standard") return;
 
         mat.SetFloat("_Mode", 0f);
@@ -300,6 +369,37 @@ public class CameraObstructionFader_ModularWalls : MonoBehaviour
         mat.DisableKeyword("_ALPHABLEND_ON");
         mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
         mat.renderQueue = -1;
+    }
+
+    bool IsURPMaterial(Material mat)
+    {
+        return mat.shader != null && mat.shader.name.Contains("Universal Render Pipeline");
+    }
+
+    Shader GetTransparentFadeShader()
+    {
+        if (_transparentFadeShader == null)
+            _transparentFadeShader = Resources.Load<Shader>("ObstructionTransparent");
+
+        if (_transparentFadeShader == null)
+            _transparentFadeShader = Shader.Find("Custom/ObstructionTransparent");
+
+        return _transparentFadeShader;
+    }
+
+    Texture GetKnownMainTexture(Material mat)
+    {
+        if (mat.HasProperty("_BaseMap"))
+        {
+            Texture baseMap = mat.GetTexture("_BaseMap");
+            if (baseMap != null)
+                return baseMap;
+        }
+
+        if (mat.HasProperty("_MainTex"))
+            return mat.GetTexture("_MainTex");
+
+        return null;
     }
 
     void OnDisable()
@@ -327,7 +427,7 @@ public class CameraObstructionFader_ModularWalls : MonoBehaviour
 
                 if (data.originalColors[i].a >= 0.99f)
                 {
-                    SetupMaterialOpaque(mat);
+                    RestoreOriginalMaterial(mat, data.originalShaders[i], data.originalRenderQueues[i]);
                 }
             }
         }
