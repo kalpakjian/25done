@@ -42,12 +42,23 @@ public class RogueController : Enemy
     [Tooltip("瞄準完成後要觸發的新攻擊 Animator Trigger。若 aiming 會用 Exit Time 自動轉到新 attack，這裡留空。")]
     public string attackTriggerName = "";
 
+    [Header("Hurt / Stagger Settings")]
+    [Tooltip("弓箭手被玩家打中後停止移動/瞄準/射箭的時間，避免一受擊就退開導致連段落空。")]
+    public float hurtStunTime = 0.45f;
+
+    [Tooltip("是否忽略玩家攻擊造成的擊退。開啟後弓箭手被打中會硬直但不會被推開。")]
+    public bool ignorePlayerPushback = true;
+
+    [Tooltip("若沒有忽略擊退，弓箭手承受的擊退倍率。")]
+    public float receivedPushbackMultiplier = 0.35f;
+
     private int currentArrows;
     private bool isAiming = false;
     private bool isReloading = false;
     private bool isAttacking = false;
     private bool hasShotThisAttack = false;
     private Vector3 lockedAttackDirection = Vector3.forward;
+    private float hurtStunEndTime = 0f;
 
     void Start()
     {
@@ -77,6 +88,13 @@ public class RogueController : Enemy
         if (dead) return;
 
         playerDist = Vector3.Distance(Player.position, transform.position);
+
+        if (Time.time < hurtStunEndTime)
+        {
+            StopMoving();
+            anim.SetBool("walk", false);
+            return;
+        }
 
         // 瞄準、射箭或上膛時，原地鎖定不移動
         if (isAiming || isAttacking || isReloading)
@@ -140,6 +158,68 @@ public class RogueController : Enemy
     // ─────────────────────────────────────────────
     //  射箭 – 由 Animation Event 在動畫適當幀呼叫
     // ─────────────────────────────────────────────
+    protected override void Hurt(Attack attack)
+    {
+        if (dead || Time.time < nextHurtTime)
+            return;
+
+        SlowMotion.Slow(0.1f, 5);
+        HP -= attack.damage;
+        if (HPBar) HPBar.fillAmount = HP / maxHP;
+
+        for (int i = 0; i < material.Count; i++)
+            material[i].SetColor("_EmissionColor", Color.white);
+
+        Invoke(nameof(StopEmission), 0.05f);
+
+        if (HP <= 0)
+        {
+            Die();
+            return;
+        }
+
+        EnterHurtStun();
+        anim.SetTrigger("hurt");
+
+        if (attack.canPushEnemy && !ignorePlayerPushback)
+        {
+            Rigidbody body = GetComponent<Rigidbody>();
+            if (body != null)
+            {
+                Vector3 pushBack = (transform.position - attack.position).normalized;
+                pushBack *= attack.strength * receivedPushbackMultiplier;
+                body.AddForce(pushBack * 10, ForceMode.Impulse);
+            }
+        }
+
+        if (attack.type == AttackType.frozen)
+        {
+            for (int i = 0; i < material.Count; i++)
+                material[i].color = frozenColor;
+            anim.speed = 0.5f;
+            Invoke(nameof(Recover), 5);
+        }
+
+        nextHurtTime = Time.time + hurtInterval;
+        nextAttackTime = Time.time + Mathf.Max(attackInterval, hurtStunTime);
+    }
+
+    void EnterHurtStun()
+    {
+        hurtStunEndTime = Time.time + hurtStunTime;
+
+        // 被打中時中斷正在進行的瞄準/射擊，避免硬直中還把箭射出去。
+        isAiming = false;
+        isAttacking = false;
+        hasShotThisAttack = false;
+        CancelInvoke(nameof(FinishAiming));
+        CancelInvoke(nameof(ShootArrowFromAttack));
+        CancelInvoke(nameof(OnAttackEnd));
+
+        StopMoving();
+        anim.SetBool("walk", false);
+    }
+
     void StartAiming()
     {
         isAiming = true;
@@ -169,7 +249,7 @@ public class RogueController : Enemy
         }
 
         StopMoving();
-        transform.rotation = Quaternion.LookRotation(lockedAttackDirection);
+        FaceAttackDirectionHorizontally();
 
         // 瞄準完成 → 進入真正射箭階段。
         // 若 attackTriggerName 留空，代表 Animator 會由 aiming 的 Exit Time 自動轉到新 attack。
@@ -201,7 +281,7 @@ public class RogueController : Enemy
             return;
         }
 
-        Vector3 spawnPos = firePoint != null ? firePoint.position : transform.position + Vector3.up;
+        Vector3 spawnPos = GetArrowSpawnPosition();
         Vector3 dir = lockedAttackDirection;
 
         GameObject arrowObj = Instantiate(arrowPrefab, spawnPos, Quaternion.LookRotation(dir));
@@ -236,15 +316,49 @@ public class RogueController : Enemy
     {
         if (Player != null)
         {
-            lockedAttackDirection = Player.position - transform.position;
-            lockedAttackDirection.y = 0f;
+            // 從真正出箭位置瞄準玩家 Collider 中心，而不是只用腳底座標與水平線。
+            // 這可避免玩家站著不動時，箭因高度差從身體上/下方擦過。
+            lockedAttackDirection = GetAimTargetPosition() - GetArrowSpawnPosition();
         }
 
         if (lockedAttackDirection.sqrMagnitude <= 0.001f)
             lockedAttackDirection = transform.forward;
 
         lockedAttackDirection.Normalize();
-        transform.rotation = Quaternion.LookRotation(lockedAttackDirection);
+
+        FaceAttackDirectionHorizontally();
+    }
+
+    void FaceAttackDirectionHorizontally()
+    {
+        Vector3 bodyDirection = lockedAttackDirection;
+        bodyDirection.y = 0f;
+        if (bodyDirection.sqrMagnitude <= 0.001f)
+            bodyDirection = transform.forward;
+
+        transform.rotation = Quaternion.LookRotation(bodyDirection.normalized);
+    }
+
+    Vector3 GetArrowSpawnPosition()
+    {
+        return firePoint != null ? firePoint.position : transform.position + Vector3.up;
+    }
+
+    Vector3 GetAimTargetPosition()
+    {
+        if (Player == null)
+            return transform.position + transform.forward;
+
+        Collider playerCollider = Player.GetComponent<Collider>();
+        if (playerCollider != null)
+            return playerCollider.bounds.center;
+
+        CharacterController characterController = Player.GetComponent<CharacterController>();
+        if (characterController != null)
+            return characterController.bounds.center;
+
+        // 沒有 Collider 時，至少瞄準身體中段而非腳底。
+        return Player.position + Vector3.up;
     }
 
     void StopMoving()

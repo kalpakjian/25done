@@ -28,7 +28,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: abe0a4c4b24ddd04784553575771c2b3, type: 2}
+  m_Motion: {fileID: 7400000, guid: 2aab1f80daa69e1418fbf81b1898bb82, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -104,8 +104,14 @@ MonoBehaviour:
   damage: 20
   type: 1
   strength: 5
+  attackStep: 1
+  canPushEnemy: 0
   start: 0.1
   end: 0.5
+  stepForwardOnSecondAndThird: 1
+  forwardStepDistance: 0.55
+  forwardStepStart: 0.05
+  forwardStepEnd: 0.35
 --- !u!114 &-6022984204226432162
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -167,7 +173,7 @@ BlendTree:
   m_Name: Blend Tree
   m_Childs:
   - serializedVersion: 2
-    m_Motion: {fileID: 7400000, guid: 187c67b682821b444851904c2f25660f, type: 2}
+    m_Motion: {fileID: 7400000, guid: 36d07daca3be57444831118de913924d, type: 2}
     m_Threshold: 0
     m_Position: {x: 0, y: 0}
     m_TimeScale: 1
@@ -225,7 +231,7 @@ AnimatorStateMachine:
     m_Position: {x: 390, y: 0, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -9153577197097948248}
-    m_Position: {x: 120, y: 0, z: 0}
+    m_Position: {x: 100, y: 0, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 1526561250635839544}
     m_Position: {x: 120, y: -70, z: 0}
@@ -692,8 +698,14 @@ MonoBehaviour:
   damage: 10
   type: 0
   strength: 1
+  attackStep: 1
+  canPushEnemy: 0
   start: 0
   end: 0.7
+  stepForwardOnSecondAndThird: 1
+  forwardStepDistance: 0.55
+  forwardStepStart: 0.05
+  forwardStepEnd: 0.35
 --- !u!1102 &3632412119295765106
 AnimatorState:
   serializedVersion: 6
@@ -869,8 +881,14 @@ MonoBehaviour:
   damage: 15
   type: 0
   strength: 1
+  attackStep: 1
+  canPushEnemy: 0
   start: 0
   end: 0.7
+  stepForwardOnSecondAndThird: 1
+  forwardStepDistance: 0.55
+  forwardStepStart: 0.05
+  forwardStepEnd: 0.35
 --- !u!114 &6181579938766594146
 MonoBehaviour:
   m_ObjectHideFlags: 1
