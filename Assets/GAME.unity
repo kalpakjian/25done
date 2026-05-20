@@ -1325,6 +1325,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6591564, guid: 2608ffc940098ff43a20d61a002760a4, type: 3}
+      propertyPath: m_Size.y
+      value: 1.2373197
+      objectReference: {fileID: 0}
+    - target: {fileID: 6591564, guid: 2608ffc940098ff43a20d61a002760a4, type: 3}
+      propertyPath: m_Center.y
+      value: 0.61865985
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2608ffc940098ff43a20d61a002760a4, type: 3}
 --- !u!1 &181433588 stripped
@@ -5392,6 +5400,14 @@ PrefabInstance:
     - target: {fileID: 431366, guid: 2608ffc940098ff43a20d61a002760a4, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6591564, guid: 2608ffc940098ff43a20d61a002760a4, type: 3}
+      propertyPath: m_Size.y
+      value: 1.2374297
+      objectReference: {fileID: 0}
+    - target: {fileID: 6591564, guid: 2608ffc940098ff43a20d61a002760a4, type: 3}
+      propertyPath: m_Center.y
+      value: 0.61871487
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2608ffc940098ff43a20d61a002760a4, type: 3}
@@ -13219,6 +13235,14 @@ MonoBehaviour:
   type: 0
   strength: 0
   canPushEnemy: 0
+  enableCloseRangeAssist: 1
+  closeRangeForwardOffset: 0.85
+  closeRangeRadius: 0.9
+  closeRangeAngle: 140
+  closeRangeHitMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  maxCloseRangeHits: 16
 --- !u!1 &1779023486 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1572965125488979908, guid: a44646976cb6dc14cb20d024654faaf1, type: 3}
@@ -13441,6 +13465,14 @@ PrefabInstance:
     - target: {fileID: 431366, guid: 2608ffc940098ff43a20d61a002760a4, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6591564, guid: 2608ffc940098ff43a20d61a002760a4, type: 3}
+      propertyPath: m_Size.y
+      value: 1.2125738
+      objectReference: {fileID: 0}
+    - target: {fileID: 6591564, guid: 2608ffc940098ff43a20d61a002760a4, type: 3}
+      propertyPath: m_Center.y
+      value: 0.6062869
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2608ffc940098ff43a20d61a002760a4, type: 3}
@@ -14379,6 +14411,14 @@ MonoBehaviour:
   type: 0
   strength: 0
   canPushEnemy: 0
+  enableCloseRangeAssist: 1
+  closeRangeForwardOffset: 0.85
+  closeRangeRadius: 0.9
+  closeRangeAngle: 140
+  closeRangeHitMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  maxCloseRangeHits: 16
 --- !u!65 &1991850794
 BoxCollider:
   m_ObjectHideFlags: 0
