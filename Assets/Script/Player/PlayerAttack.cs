@@ -28,6 +28,7 @@ public class PlayerAttack : StateMachineBehaviour {
 		weapon.type = type;
 		weapon.strength = strength;
 		weapon.canPushEnemy = canPushEnemy;
+		weapon.ResetHitTargets();
 	}
 
 	override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {

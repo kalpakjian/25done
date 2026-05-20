@@ -170,18 +170,18 @@ public class StartGameMenu : MonoBehaviour
 
         startButton = CreateButton("Start Game Button", startButtonText, menuPanel.transform);
         RectTransform buttonRect = startButton.GetComponent<RectTransform>();
-        buttonRect.anchorMin = new Vector2(0.5f, 0.5f);
-        buttonRect.anchorMax = new Vector2(0.5f, 0.5f);
+        buttonRect.anchorMin = new Vector2(0.5f, 0f);
+        buttonRect.anchorMax = new Vector2(0.5f, 0f);
         buttonRect.pivot = new Vector2(0.5f, 0.5f);
-        buttonRect.anchoredPosition = new Vector2(0f, -210f);
+        buttonRect.anchoredPosition = new Vector2(0f, 470f);
         buttonRect.sizeDelta = new Vector2(520f, 260f);
 
         quitButton = CreateButton("Quit Button", quitButtonText, menuPanel.transform, GetQuitButtonSprite(), Color.white);
         RectTransform quitButtonRect = quitButton.GetComponent<RectTransform>();
-        quitButtonRect.anchorMin = new Vector2(0.5f, 0.5f);
-        quitButtonRect.anchorMax = new Vector2(0.5f, 0.5f);
+        quitButtonRect.anchorMin = new Vector2(0.5f, 0f);
+        quitButtonRect.anchorMax = new Vector2(0.5f, 0f);
         quitButtonRect.pivot = new Vector2(0.5f, 0.5f);
-        quitButtonRect.anchoredPosition = new Vector2(0f, -385f);
+        quitButtonRect.anchoredPosition = new Vector2(0f, 270f);
         quitButtonRect.sizeDelta = new Vector2(360f, 180f);
     }
 
