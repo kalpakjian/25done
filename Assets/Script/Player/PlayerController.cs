@@ -29,6 +29,13 @@ public class PlayerController : MonoBehaviour
     [HideInInspector] public bool CurrentAttackHit = false;
     [HideInInspector] public int CurrentAttackStep = 0;
 
+    [Header("2H Combo Miss States")]
+    [Tooltip("揮空時可隨機跳到的 2H 狀態名稱（在 Animator 裡叫什麼就填什麼）")]
+    public string[] missAttackStateNames = { "2H1", "2H2", "2H3", "2H4", "2H5" };
+
+    [Tooltip("打中後要接的下一個攻擊狀態（通常是 attack02）")]
+    public string hitContinueStateName = "attack02";
+
     private Animator anim;
 
     private float moveSpeed;
@@ -163,8 +170,46 @@ public class PlayerController : MonoBehaviour
     {
         if (!NextAttack) return;
 
+        AnimatorStateInfo s = anim.GetCurrentAnimatorStateInfo(0);
+        bool inMissEligible = IsInMissEligibleState(s);
+        bool wasHit = CurrentAttackHit;   // 先記錄，後面才清除
+
+        CurrentAttackHit = false;
+        NextAttack = false;
         anim.ResetTrigger("attack");
-        anim.SetTrigger("attack");
+
+        if (inMissEligible)
+        {
+            if (wasHit)
+            {
+                // 打中 → 直接接 attack02（或 hitContinueStateName 設定的狀態）
+                anim.CrossFade(hitContinueStateName, 0.05f);
+            }
+            else
+            {
+                // 揮空 → 隨機一個 2H 動作
+                int idx = Random.Range(0, missAttackStateNames.Length);
+                anim.CrossFade(missAttackStateNames[idx], 0.05f);
+            }
+        }
+        else
+        {
+            // 正常起始攻擊（從 Idle 或 attack02/03 開始）
+            anim.SetTrigger("attack");
+        }
+    }
+
+    /// <summary>
+    /// 判斷當前是否在「揮空可接 2H」的狀態（attack01 或任何 2H state）
+    /// </summary>
+    bool IsInMissEligibleState(AnimatorStateInfo s)
+    {
+        if (s.IsName("attack01") || s.IsName("meleeattack01"))
+            return true;
+        foreach (string name in missAttackStateNames)
+            if (s.IsName(name))
+                return true;
+        return false;
     }
 
     public void RegisterAttackHit()

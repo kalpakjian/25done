@@ -14,12 +14,19 @@ public class PlayerAttack : StateMachineBehaviour {
 	public float forwardStepStart = 0.05f;
 	public float forwardStepEnd = 0.35f;
 
+	[Tooltip("動畫播完後自動回 Idle（在 2H1~2H5 上勾選此項）")]
+	public bool returnToIdleOnComplete = false;
+	[Tooltip("自動回去的狀態名稱（預設 Idle，若你的 Idle 叫別的名字請修改）")]
+	public string idleStateName = "Idle";
+
 	PlayerController player;
 	PlayerWeapon weapon;
+	bool hasReturnedToIdle = false;
 
 	override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
 		player = animator.GetComponent<PlayerController>();
 		weapon = animator.GetComponentInChildren<PlayerWeapon>();
+		hasReturnedToIdle = false;
 
 		// 若 Inspector 未設定 attackStep（預設 1），自動依狀態名稱偵測第幾擊
 		bool nameIs3rd = stateInfo.IsName("attack03") || stateInfo.IsName("meleeattack03");
@@ -41,6 +48,13 @@ public class PlayerAttack : StateMachineBehaviour {
 	}
 
 	override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
+		// 動畫播完自動回 Idle（2H 系列勾選 returnToIdleOnComplete 後啟用）
+		if (returnToIdleOnComplete && !hasReturnedToIdle && stateInfo.normalizedTime >= 1.0f) {
+			hasReturnedToIdle = true;
+			animator.CrossFade(idleStateName, 0.1f);
+			return;
+		}
+
 		if (weapon == null) return;
 
 		MoveForwardDuringComboStep(animator, stateInfo);
