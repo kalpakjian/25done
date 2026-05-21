@@ -20,14 +20,23 @@ public class PlayerAttack : StateMachineBehaviour {
 	override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
 		player = animator.GetComponent<PlayerController>();
 		weapon = animator.GetComponentInChildren<PlayerWeapon>();
-		player.CurrentAttackStep = attackStep;
+
+		// 若 Inspector 未設定 attackStep（預設 1），自動依狀態名稱偵測第幾擊
+		bool nameIs3rd = stateInfo.IsName("attack03") || stateInfo.IsName("meleeattack03");
+		bool nameIs2nd = stateInfo.IsName("attack02") || stateInfo.IsName("meleeattack02");
+		int resolvedStep = attackStep;
+		if (resolvedStep < 2 && nameIs2nd) resolvedStep = 2;
+		if (resolvedStep < 3 && nameIs3rd) resolvedStep = 3;
+
+		player.CurrentAttackStep = resolvedStep;
 		player.CurrentAttackHit = false;
 
 		if (weapon == null) return;
 
 		weapon.type = type;
 		weapon.strength = strength;
-		weapon.canPushEnemy = canPushEnemy;
+		// 第三擊強制開啟 canPushEnemy，即使 Inspector 沒有勾選
+		weapon.canPushEnemy = canPushEnemy || resolvedStep >= 3;
 		weapon.ResetHitTargets();
 	}
 

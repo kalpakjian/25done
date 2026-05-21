@@ -160,7 +160,10 @@ public class RogueController : Enemy
     // ─────────────────────────────────────────────
     protected override void Hurt(Attack attack)
     {
-        if (dead || Time.time < nextHurtTime)
+        // 三連擊收尾技無視 hurtInterval，確保擊退一定觸發
+        bool isComboFinisher = attack.attackStep >= 3;
+
+        if (dead || (!isComboFinisher && Time.time < nextHurtTime))
             return;
 
         SlowMotion.Slow(0.1f, 5);
@@ -181,14 +184,23 @@ public class RogueController : Enemy
         EnterHurtStun();
         anim.SetTrigger("hurt");
 
-        if (attack.canPushEnemy && !ignorePlayerPushback)
+        // 第三擊（收尾技）無論 canPushEnemy 是否勾選，一律強制推擊（仍受 ignorePlayerPushback 控制）
+        if ((attack.canPushEnemy || attack.attackStep >= 3) && !ignorePlayerPushback)
         {
             Rigidbody body = GetComponent<Rigidbody>();
             if (body != null)
             {
                 Vector3 pushBack = (transform.position - attack.position).normalized;
-                pushBack *= attack.strength * receivedPushbackMultiplier;
-                body.AddForce(pushBack * 10, ForceMode.Impulse);
+                pushBack.y = 0f;
+                if (pushBack.sqrMagnitude < 0.001f)
+                    pushBack = Vector3.forward;
+                pushBack.Normalize();
+
+                float pushSpeed = attack.attackStep >= 3 ? 0.4f
+                                : attack.attackStep == 2 ? 0.25f
+                                : 0.15f;
+                pushBack *= Mathf.Max(attack.strength, 1) * pushSpeed * receivedPushbackMultiplier;
+                body.AddForce(pushBack, ForceMode.VelocityChange);
             }
         }
 

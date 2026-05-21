@@ -116,10 +116,15 @@ public class PlayerWeapon : MonoBehaviour {
 		hitTargets.Add(target);
 
 		attack.damage = attackDamage + weaponDamage;
-		attack.position = player != null ? player.position : transform.position;
+		// 使用玩家身後半格位置作為攻擊來源，確保即使第三擊貼近敵人時
+		// 推擊方向向量也不會因雙方幾乎重疊而縮為零（normalized 近乎 Vector3.zero）。
+		attack.position = player != null
+			? player.position - player.forward * 0.5f
+			: transform.position;
 		attack.type = type;
 		attack.strength = strength;
 		attack.canPushEnemy = canPushEnemy;
+		attack.attackStep = controller != null ? controller.CurrentAttackStep : 1;
 
 		target.SendMessage("Hurt", attack);
 
