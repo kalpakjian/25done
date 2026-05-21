@@ -8,6 +8,10 @@ public class EnemyAttack : StateMachineBehaviour {
 	[Tooltip("動畫 normalizedTime 超過此值後，武器傷害關閉。")]
 	public float end = 1;
 
+	[Header("揮空追加 Spinning 攻擊")]
+	[Tooltip("勾選後，若此攻擊結束時沒有打到玩家（揮空），則接續播放 spinAttackStateName 動畫。\n請在 golem 的普通攻擊 state 上勾選此選項。")]
+	public bool triggerSpinOnMiss = false;
+
 	Enemy enemy;
 	// 支援雙持武器：取得所有 EnemyWeapon（含雙手）
 	EnemyWeapon[] weapons;
@@ -46,5 +50,17 @@ public class EnemyAttack : StateMachineBehaviour {
 
 	override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
 		SetAllWeaponDamage(0);
+
+		// 若揮空（沒有命中玩家）且此 state 設定為觸發 Spinning 攻擊
+		if (triggerSpinOnMiss && enemy != null && !enemy.IsDead && !enemy.lastAttackHitPlayer)
+		{
+			string spinState = enemy.spinAttackStateName;
+			if (!string.IsNullOrEmpty(spinState))
+			{
+				animator.CrossFadeInFixedTime(spinState, enemy.animatorCrossFadeDuration);
+				// 啟動 coroutine：等 spinning 播完後才轉身面向 Player
+				enemy.StartCoroutine(enemy.WaitSpinThenFace(animator, spinState));
+			}
+		}
 	}
 }

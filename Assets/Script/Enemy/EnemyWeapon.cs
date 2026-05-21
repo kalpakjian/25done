@@ -55,6 +55,7 @@ public class EnemyWeapon : MonoBehaviour {
 		{
 			hasHitThisSwing = true;   // 一次揮擊只命中一次，防連續扣血
 			col.SendMessage("Hurt", attackDamage + weaponDamage);
+			owner.OnNotifyHit();
 		}
 	}
 

@@ -13,6 +13,7 @@ public class Enemy : MonoBehaviour {
 	public float attackRange = 2f;
 	public float attackInterval = 2f;
 	public float power = 1;
+	public bool lastAttackHitPlayer = false;
 	[Header("Movement")]
 	[Tooltip("使用 NavMeshAgent 算路，但由本腳本同步角色位置，避免 Agent 直接拖動造成無動畫漂移。")]
 	public bool moveWithAgentDesiredVelocity = true;
@@ -30,6 +31,7 @@ public class Enemy : MonoBehaviour {
 	public string attackStateName = "attack";
 	public string hurtStateName = "hurt";
 	public string deathStateName = "death";
+	public string spinAttackStateName = "Melee_2H_Attack_Spinning";
 	public float animatorCrossFadeDuration = 0.08f;
 	protected float nextAttackTime = 0;
 
@@ -120,8 +122,10 @@ public class Enemy : MonoBehaviour {
 			anim.SetBool("walk", false);
 			NM.isStopped = true;
 			NM.velocity = Vector3.zero;
+
 			if (Time.time >= nextAttackTime)
 			{
+				lastAttackHitPlayer = false;
 				anim.SetTrigger("attack");
 				PlayAnimatorState(attackStateName, true);
 				nextAttackTime = Time.time + attackInterval;
@@ -165,7 +169,8 @@ public class Enemy : MonoBehaviour {
 	{
 		return stateInfo.IsName(attackStateName)
 			|| stateInfo.IsName(hurtStateName)
-			|| stateInfo.IsName(deathStateName);
+			|| stateInfo.IsName(deathStateName)
+			|| stateInfo.IsName(spinAttackStateName);
 	}
 
 	protected virtual void lateUpdate()
@@ -248,7 +253,7 @@ public class Enemy : MonoBehaviour {
 			// 第三擊（收尾技）無論 canPushEnemy 是否勾選，一律強制推擊
 			if (attack.canPushEnemy || attack.attackStep >= 3)
 			{
-				Vector3 pushBack = (transform.position - attack.position).normalized;
+			Vector3 pushBack = (transform.position - attack.position).normalized;
 				pushBack.y = 0f;
 				if (pushBack.sqrMagnitude < 0.001f)
 					pushBack = Vector3.forward;
@@ -305,6 +310,71 @@ public class Enemy : MonoBehaviour {
 	void Remove()
 	{
 		Destroy(gameObject);
+	}
+
+	public void OnNotifyHit()
+	{
+		lastAttackHitPlayer = true;
+	}
+
+	/// <summary>
+	/// 瞬間讓敵人面向 Player（用於 spinning 攻擊結束後轉身）。
+	/// </summary>
+	public void FacePlayer()
+	{
+		if (Player == null) return;
+		Vector3 dir = (Player.position - transform.position);
+		dir.y = 0;
+		if (dir.sqrMagnitude > 0.001f)
+			transform.rotation = Quaternion.LookRotation(dir.normalized);
+	}
+
+	/// <summary>
+	/// 等待 Animator 離開 spinStateName 對應的 state 後，瞬間面向 Player。
+	/// 由 EnemyAttack.cs 在觸發 spinning 時呼叫。
+	/// </summary>
+	public System.Collections.IEnumerator WaitSpinThenFace(Animator animator, string spinStateName)
+	{
+		// 先等一幀，讓 CrossFade 生效、Animator 進入過渡
+		yield return null;
+		yield return null;
+
+		// 等待進入 spinning state（最多等 0.5 秒）
+		float waitIn = 0f;
+		while (waitIn < 0.5f && !animator.GetCurrentAnimatorStateInfo(0).IsName(spinStateName))
+		{
+			waitIn += Time.deltaTime;
+			yield return null;
+		}
+
+		// 等待 spinning state 播完（離開該 state）
+		float timeout = 10f;
+		float elapsed = 0f;
+		while (elapsed < timeout && animator.GetCurrentAnimatorStateInfo(0).IsName(spinStateName))
+		{
+			elapsed += Time.deltaTime;
+			yield return null;
+		}
+
+		// spinning 結束，若 golem 仍存活則轉身面向 Player
+		if (!IsDead)
+			FacePlayer();
+	}
+
+	void RotateTowardsPlayer()
+	{
+		if (Player == null || anim == null) return;
+
+		AnimatorStateInfo stateInfo = anim.GetCurrentAnimatorStateInfo(0);
+		if (IsInBlockingState(stateInfo)) return;
+
+		Vector3 direction = (Player.position - transform.position).normalized;
+		direction.y = 0;
+		if (direction.sqrMagnitude > 0.001f)
+		{
+			Quaternion targetRot = Quaternion.LookRotation(direction);
+			transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotationSpeed * Time.deltaTime);
+		}
 	}
 
 	protected void StopEnemyActions()
