@@ -939,8 +939,10 @@ MonoBehaviour:
   attackInterval: 2
   power: 1
   moveWithAgentDesiredVelocity: 1
+  walkAnimSpeed: 1.5
   movementSpeedMultiplier: 1
   stoppingDistanceBuffer: 0
+  rotationSpeed: 120
   forceAnimatorStates: 1
   walkStateName: walk
   attackStateName: attack
@@ -948,6 +950,7 @@ MonoBehaviour:
   deathStateName: death
   animatorCrossFadeDuration: 0.08
   maxHP: 200
+  keepBodyOnDeath: 0
   hurtInterval: 0.3
   AllowRotate: 1
   rewardItem: {fileID: 3246601390664572164, guid: ed0084702e63fc848b9900ea6d27c14f, type: 3}
@@ -2153,8 +2156,10 @@ MonoBehaviour:
   attackInterval: 2
   power: 1
   moveWithAgentDesiredVelocity: 1
+  walkAnimSpeed: 1.5
   movementSpeedMultiplier: 1
   stoppingDistanceBuffer: 0
+  rotationSpeed: 120
   forceAnimatorStates: 1
   walkStateName: walk
   attackStateName: attack
@@ -2162,6 +2167,7 @@ MonoBehaviour:
   deathStateName: death
   animatorCrossFadeDuration: 0.08
   maxHP: 100
+  keepBodyOnDeath: 0
   hurtInterval: 0.3
   AllowRotate: 1
   rewardItem: {fileID: 3246601390664572164, guid: ed0084702e63fc848b9900ea6d27c14f, type: 3}
@@ -3300,6 +3306,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 0
+  showDebugCollider: 1
 --- !u!65 &230613416
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3974,6 +3981,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 0
+  showDebugCollider: 1
 --- !u!1 &344229908 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7131713813646869822, guid: 63748d2014407a7458b5f61ea5653932, type: 3}
@@ -4193,6 +4201,123 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 1f518253d4e1baf46a3707bed20eb99e, type: 3}
   m_PrefabInstance: {fileID: 2108689634}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &382944917
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 1057222426}
+    m_Modifications:
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_RootOrder
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 150
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.005
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.005
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.110954285
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0.0036392212
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 4.3099995
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255474, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_Name
+      value: FloatingInfoCanvas
+      objectReference: {fileID: 0}
+    - target: {fileID: 8710440197085255477, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_Camera
+      value: 
+      objectReference: {fileID: 998856289}
+    - target: {fileID: 8710440197085255478, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
 --- !u!1 &389952398 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4215867268504452992, guid: 7ede4dcfdb86a814291fe8a84ca8b862, type: 3}
@@ -4307,6 +4432,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 0
+  showDebugCollider: 1
 --- !u!65 &421533086
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -6009,8 +6135,10 @@ MonoBehaviour:
   attackInterval: 2
   power: 1
   moveWithAgentDesiredVelocity: 1
+  walkAnimSpeed: 1.5
   movementSpeedMultiplier: 1
   stoppingDistanceBuffer: 0
+  rotationSpeed: 120
   forceAnimatorStates: 1
   walkStateName: walk
   attackStateName: attack
@@ -6018,6 +6146,7 @@ MonoBehaviour:
   deathStateName: death
   animatorCrossFadeDuration: 0.08
   maxHP: 200
+  keepBodyOnDeath: 0
   hurtInterval: 0.3
   AllowRotate: 1
   rewardItem: {fileID: 3246601390664572164, guid: ed0084702e63fc848b9900ea6d27c14f, type: 3}
@@ -6476,6 +6605,11 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 2, y: 0.5300001, z: 2}
   m_Center: {x: 0, y: -0.235, z: 0}
+--- !u!224 &575007543 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 8710440197085255473, guid: c79e3a5130c9a4e43a65452a04b496d6, type: 3}
+  m_PrefabInstance: {fileID: 382944917}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &584084779 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8219035492734032618, guid: 7ede4dcfdb86a814291fe8a84ca8b862, type: 3}
@@ -7449,15 +7583,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7239361314865794458, guid: 0af7958a0cdae2043b88741c48ab1657, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -26.68428
+      value: -56.97049
       objectReference: {fileID: 0}
     - target: {fileID: 7239361314865794458, guid: 0af7958a0cdae2043b88741c48ab1657, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.0478535
+      value: 5.254819
       objectReference: {fileID: 0}
     - target: {fileID: 7239361314865794458, guid: 0af7958a0cdae2043b88741c48ab1657, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 38.264206
+      value: 5.9462185
       objectReference: {fileID: 0}
     - target: {fileID: 7239361314865794458, guid: 0af7958a0cdae2043b88741c48ab1657, type: 3}
       propertyPath: m_LocalRotation.w
@@ -7556,8 +7690,10 @@ MonoBehaviour:
   attackInterval: 2
   power: 1
   moveWithAgentDesiredVelocity: 1
+  walkAnimSpeed: 1.5
   movementSpeedMultiplier: 1
   stoppingDistanceBuffer: 0
+  rotationSpeed: 120
   forceAnimatorStates: 1
   walkStateName: walk
   attackStateName: attack
@@ -7565,6 +7701,7 @@ MonoBehaviour:
   deathStateName: death
   animatorCrossFadeDuration: 0.08
   maxHP: 100
+  keepBodyOnDeath: 0
   hurtInterval: 0.3
   AllowRotate: 1
   rewardItem: {fileID: 3246601390664572164, guid: ed0084702e63fc848b9900ea6d27c14f, type: 3}
@@ -8091,6 +8228,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 0
+  showDebugCollider: 1
 --- !u!65 &774901539
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -10070,7 +10208,7 @@ Transform:
   - {fileID: 1030029894}
   - {fileID: 990039732}
   m_Father: {fileID: 0}
-  m_RootOrder: 15
+  m_RootOrder: 14
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &970841764 stripped
 GameObject:
@@ -10340,8 +10478,10 @@ MonoBehaviour:
   attackInterval: 2
   power: 1
   moveWithAgentDesiredVelocity: 1
+  walkAnimSpeed: 1.5
   movementSpeedMultiplier: 1
   stoppingDistanceBuffer: 0
+  rotationSpeed: 120
   forceAnimatorStates: 1
   walkStateName: walk
   attackStateName: attack
@@ -10349,6 +10489,7 @@ MonoBehaviour:
   deathStateName: death
   animatorCrossFadeDuration: 0.08
   maxHP: 200
+  keepBodyOnDeath: 0
   hurtInterval: 0.3
   AllowRotate: 1
   rewardItem: {fileID: 3246601390664572164, guid: ed0084702e63fc848b9900ea6d27c14f, type: 3}
@@ -11323,6 +11464,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 0
+  showDebugCollider: 1
 --- !u!65 &1028446956
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -11565,13 +11707,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f53ea67ad86df41419e105bd595d0505, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  traceRange: 5
-  attackRange: 2
+  traceRange: 10
+  attackRange: 5
   attackInterval: 4
   power: 2
   moveWithAgentDesiredVelocity: 1
+  walkAnimSpeed: 1.5
   movementSpeedMultiplier: 1
   stoppingDistanceBuffer: 0
+  rotationSpeed: 120
   forceAnimatorStates: 1
   walkStateName: walk
   attackStateName: attack
@@ -11579,6 +11723,7 @@ MonoBehaviour:
   deathStateName: death
   animatorCrossFadeDuration: 0.08
   maxHP: 200
+  keepBodyOnDeath: 1
   hurtInterval: 0.3
   AllowRotate: 1
   rewardItem: {fileID: 0}
@@ -11599,8 +11744,9 @@ Transform:
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1470310882}
+  - {fileID: 575007543}
   m_Father: {fileID: 0}
-  m_RootOrder: 16
+  m_RootOrder: 15
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!136 &1057222427
 CapsuleCollider:
@@ -12647,8 +12793,10 @@ MonoBehaviour:
   attackInterval: 2
   power: 1
   moveWithAgentDesiredVelocity: 1
+  walkAnimSpeed: 1.5
   movementSpeedMultiplier: 1
   stoppingDistanceBuffer: 0
+  rotationSpeed: 120
   forceAnimatorStates: 1
   walkStateName: walk
   attackStateName: attack
@@ -12656,6 +12804,7 @@ MonoBehaviour:
   deathStateName: death
   animatorCrossFadeDuration: 0.08
   maxHP: 100
+  keepBodyOnDeath: 0
   hurtInterval: 0.3
   AllowRotate: 1
   rewardItem: {fileID: 3246601390664572164, guid: ed0084702e63fc848b9900ea6d27c14f, type: 3}
@@ -13722,7 +13871,7 @@ Transform:
   - {fileID: 998856290}
   - {fileID: 1484573400}
   m_Father: {fileID: 0}
-  m_RootOrder: 14
+  m_RootOrder: 16
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1311746451 stripped
 GameObject:
@@ -14027,8 +14176,10 @@ MonoBehaviour:
   attackInterval: 2
   power: 1
   moveWithAgentDesiredVelocity: 1
+  walkAnimSpeed: 1.5
   movementSpeedMultiplier: 1
   stoppingDistanceBuffer: 0
+  rotationSpeed: 120
   forceAnimatorStates: 1
   walkStateName: walk
   attackStateName: attack
@@ -14036,6 +14187,7 @@ MonoBehaviour:
   deathStateName: death
   animatorCrossFadeDuration: 0.08
   maxHP: 100
+  keepBodyOnDeath: 0
   hurtInterval: 0.3
   AllowRotate: 1
   rewardItem: {fileID: 3246601390664572164, guid: ed0084702e63fc848b9900ea6d27c14f, type: 3}
@@ -14346,8 +14498,10 @@ MonoBehaviour:
   attackInterval: 2
   power: 1
   moveWithAgentDesiredVelocity: 1
+  walkAnimSpeed: 1.5
   movementSpeedMultiplier: 1
   stoppingDistanceBuffer: 0
+  rotationSpeed: 120
   forceAnimatorStates: 1
   walkStateName: walk
   attackStateName: attack
@@ -14355,6 +14509,7 @@ MonoBehaviour:
   deathStateName: death
   animatorCrossFadeDuration: 0.08
   maxHP: 200
+  keepBodyOnDeath: 0
   hurtInterval: 0.3
   AllowRotate: 1
   rewardItem: {fileID: 3246601390664572164, guid: ed0084702e63fc848b9900ea6d27c14f, type: 3}
@@ -14583,8 +14738,10 @@ MonoBehaviour:
   attackInterval: 3
   power: 2
   moveWithAgentDesiredVelocity: 1
+  walkAnimSpeed: 1.5
   movementSpeedMultiplier: 1
   stoppingDistanceBuffer: 0
+  rotationSpeed: 120
   forceAnimatorStates: 1
   walkStateName: walk
   attackStateName: attack
@@ -14592,6 +14749,7 @@ MonoBehaviour:
   deathStateName: death
   animatorCrossFadeDuration: 0.08
   maxHP: 200
+  keepBodyOnDeath: 0
   hurtInterval: 0.3
   AllowRotate: 1
   rewardItem: {fileID: 3246601390664572164, guid: ed0084702e63fc848b9900ea6d27c14f, type: 3}
@@ -14798,6 +14956,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 10
+  showDebugCollider: 1
 --- !u!1 &1470310881 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 2060f4896cc71ad45bc46d8639ad4935, type: 3}
@@ -14959,6 +15118,13 @@ MonoBehaviour:
   NextAttack: 1
   CurrentAttackHit: 0
   CurrentAttackStep: 0
+  missAttackStateNames:
+  - 2H1
+  - 2H2
+  - 2H3
+  - 2H4
+  - 2H5
+  hitContinueStateName: attack02
 --- !u!82 &1484573405
 AudioSource:
   m_ObjectHideFlags: 0
@@ -16325,6 +16491,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 0
+  showDebugCollider: 1
 --- !u!1 &1603065830 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8033936374659392618, guid: 63748d2014407a7458b5f61ea5653932, type: 3}
@@ -16441,8 +16608,10 @@ MonoBehaviour:
   attackInterval: 2
   power: 1
   moveWithAgentDesiredVelocity: 1
+  walkAnimSpeed: 1.5
   movementSpeedMultiplier: 1
   stoppingDistanceBuffer: 0
+  rotationSpeed: 120
   forceAnimatorStates: 1
   walkStateName: walk
   attackStateName: attack
@@ -16450,6 +16619,7 @@ MonoBehaviour:
   deathStateName: death
   animatorCrossFadeDuration: 0.08
   maxHP: 100
+  keepBodyOnDeath: 0
   hurtInterval: 0.3
   AllowRotate: 1
   rewardItem: {fileID: 3246601390664572164, guid: ed0084702e63fc848b9900ea6d27c14f, type: 3}
@@ -17250,7 +17420,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attackDamage: 0
-  weaponDamage: 10
+  weaponDamage: 5
   type: 0
   strength: 0
   canPushEnemy: 0
@@ -17383,6 +17553,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 10
+  showDebugCollider: 1
 --- !u!1 &1805408291 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8504179832325001310, guid: e64d4f0df412ae84b82f633f2ac93b63, type: 3}
