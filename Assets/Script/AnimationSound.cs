@@ -8,13 +8,21 @@ public class AnimationSound : StateMachineBehaviour {
 
 	override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
 
-		if (audioSource == null) {
+	if (audioSource == null) {
+			// 先找同物件，再找父物件
 			audioSource = animator.GetComponent<AudioSource>();
+			if (audioSource == null)
+				audioSource = animator.GetComponentInParent<AudioSource>();
 		}
 
+		// 還是找不到 → 自動加一個（靜音防錯；怪物用 3D 音效）
 		if (audioSource == null) {
-			Debug.LogWarning($"AnimationSound: No AudioSource found on '{animator.name}'.");
-			return;
+			audioSource = animator.gameObject.AddComponent<AudioSource>();
+			audioSource.playOnAwake  = false;
+			audioSource.spatialBlend = 1f;   // 3D
+			audioSource.rolloffMode  = AudioRolloffMode.Linear;
+			audioSource.maxDistance  = 30f;
+			Debug.Log($"[AnimationSound] 自動為 '{animator.name}' 加入 AudioSource。");
 		}
 
 		if (sounds == null || sounds.Length == 0) {

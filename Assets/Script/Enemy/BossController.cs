@@ -23,7 +23,22 @@ public class BossController : Enemy {
 	private IEnumerator ShowEndUIAfterDelay()
 	{
 		yield return new WaitForSeconds(5f);
-		EndGameButtons.Show();
+
+		// 優先使用 EndingUI（有計分動畫）
+		EndingUI endingUI = FindObjectOfType<EndingUI>(true);
+		if (endingUI != null)
+		{
+			PlayerLife playerLife = FindObjectOfType<PlayerLife>();
+			int remainHP = playerLife != null ? Mathf.Max(0, Mathf.RoundToInt(playerLife.HP)) : 0;
+			int gemCount = Mathf.Max(0, CrystalCount.crystal);
+			endingUI.ShowEnding(remainHP, gemCount);
+		}
+		else
+		{
+			// fallback：場景中沒有 EndingUI 時，改用舊的兩個按鈕
+			Debug.LogWarning("[BossController] 找不到 EndingUI，使用 EndGameButtons 作備用。");
+			EndGameButtons.Show();
+		}
 	}
 
 	protected override void Hurt(Attack attack)
