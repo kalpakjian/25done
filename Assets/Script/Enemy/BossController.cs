@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 public class BossController : Enemy {
@@ -9,6 +10,20 @@ public class BossController : Enemy {
 	void Start () {
 		start();
 		AS = GetComponent<AudioSource>();
+
+		// GOLEM 死亡後觸發完場 UI
+		dieEvent.AddListener(OnBossDied);
+	}
+
+	private void OnBossDied()
+	{
+		StartCoroutine(ShowEndUIAfterDelay());
+	}
+
+	private IEnumerator ShowEndUIAfterDelay()
+	{
+		yield return new WaitForSeconds(5f);
+		EndGameButtons.Show();
 	}
 
 	protected override void Hurt(Attack attack)
