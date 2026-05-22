@@ -32,7 +32,7 @@ public class EndingUI : MonoBehaviour
 
     // ── Score ──────────────────────────────────────────────────────
     [Header("Score Settings")]
-    [SerializeField] private int hpMultiplier  = 10;
+    [SerializeField] private int hpMultiplier  = 10000;
     [SerializeField] private int gemMultiplier = 1000;
     [SerializeField] private int totalDigits   = 8;
 
@@ -331,18 +331,20 @@ public class EndingUI : MonoBehaviour
         // ── Buttons ───────────────────────────────────────────────
         if (playAgainButton == null)
         {
+            // 屏幕上方：anchorPos=(0.5, 1)，pivot=(1,1)，距頂部 -60px，向左偏 -20px
             playAgainButton = CreateImageButton("PlayAgainBtn",
                 rootPanel.transform, "BTN_PLAYAGAIN",
-                new Vector2(0.5f, 0.18f), new Vector2(-20f, 0f), new Vector2(680f, 200f),
-                new Vector2(1f, 0.5f));
+                new Vector2(0.5f, 1f), new Vector2(-20f, -60f), new Vector2(760f, 240f),
+                new Vector2(1f, 1f));
         }
 
         if (quitButton == null)
         {
+            // 屏幕上方：anchorPos=(0.5, 1)，pivot=(0,1)，距頂部 -60px，向右偏 +20px
             quitButton = CreateImageButton("QuitBtn",
                 rootPanel.transform, "BTN_QUIT",
-                new Vector2(0.5f, 0.18f), new Vector2(20f, 0f), new Vector2(680f, 200f),
-                new Vector2(0f, 0.5f));
+                new Vector2(0.5f, 1f), new Vector2(20f, -60f), new Vector2(760f, 240f),
+                new Vector2(0f, 1f));
         }
     }
 
