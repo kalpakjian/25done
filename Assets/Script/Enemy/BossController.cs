@@ -8,11 +8,12 @@ public class BossController : Enemy {
 	public AudioClip hurtSound;
 
 	[Header("Ending Delay (seconds after death)")]
-	public float endingDelay = 5f;
+	public float endingDelay = 3f;
 
 	void Start () {
 		start();
 		AS = GetComponent<AudioSource>();
+		keepBodyAfterDeath = true;   // Boss 死後保留屍體
 	}
 
 	protected override void Hurt(Attack attack)
