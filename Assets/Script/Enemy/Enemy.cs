@@ -38,6 +38,10 @@ public class Enemy : MonoBehaviour {
 
 	public UnityEvent dieEvent;
 
+	[Header("Death Body")]
+	public bool keepBodyAfterDeath = false;
+	public float removeDelay = 5f;
+
 	protected void start () {
 
 		var transforms = GetComponentsInChildren<Transform>();
@@ -75,6 +79,7 @@ public class Enemy : MonoBehaviour {
 	}
 
 	protected void update () {
+		if (dead) return;   // 死亡後停止 AI 更新
 		playerDist = Vector3.Distance(Player.position, transform.position);
 
 		if (playerDist < attackRange)
@@ -100,6 +105,8 @@ public class Enemy : MonoBehaviour {
 
 	protected void lateUpdate()
 	{
+		if (dead) return;   // 死亡後停止，避免 NM 被禁用後報錯
+
 		NM.nextPosition = transform.position;
 
 		if (AllowRotate)
@@ -163,9 +170,27 @@ public class Enemy : MonoBehaviour {
 		if (rewardItem) Instantiate(rewardItem, transform.position, Quaternion.identity);
 		dead = true;
 		anim.SetTrigger("die");
-		Invoke("Remove", 5);
+		if (!keepBodyAfterDeath)
+			Invoke("Remove", removeDelay);
 		if (HPBar) HPBar.transform.parent.gameObject.SetActive(false);
 		gameObject.layer = 0;
+
+		// 死亡後立即停止轉向與移動
+		AllowRotate = false;
+		NM.updateRotation = false;
+		NM.velocity = Vector3.zero;
+		NM.isStopped = true;
+		NM.enabled = false;
+
+		// 凍結 Rigidbody，讓屍體不再被物理推動
+		Rigidbody rb = GetComponent<Rigidbody>();
+		if (rb != null)
+		{
+			rb.velocity = Vector3.zero;
+			rb.angularVelocity = Vector3.zero;
+			rb.constraints = RigidbodyConstraints.FreezeAll;
+		}
+
 		dieEvent.Invoke();
 	}
 
