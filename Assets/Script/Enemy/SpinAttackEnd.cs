@@ -26,12 +26,19 @@ public class SpinAttackEnd : StateMachineBehaviour
 
 	override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
 	{
-		if (enemy == null || enemy.IsDead) return;
+		if (enemy == null || !enemy.gameObject.activeInHierarchy) return;
+
+		Transform player = GameObject.FindWithTag("Player")?.transform;
+		if (player == null) return;
+
+		Vector3 dir = player.position - enemy.transform.position;
+		dir.y = 0f;
+		if (dir.sqrMagnitude < 0.001f) return;
 
 		if (snapRotationSpeed <= 0f)
 		{
 			// 瞬間轉向
-			enemy.FacePlayer();
+			enemy.transform.rotation = Quaternion.LookRotation(dir.normalized);
 		}
 		else
 		{
@@ -52,7 +59,7 @@ public class SpinAttackEnd : StateMachineBehaviour
 
 		while (elapsed < timeout)
 		{
-			if (e == null || e.IsDead) yield break;
+		if (e == null || !e.gameObject.activeInHierarchy) yield break;
 
 			Vector3 dir = (player.position - e.transform.position);
 			dir.y = 0;

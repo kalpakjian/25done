@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -7,46 +7,17 @@ public class BossController : Enemy {
 	AudioSource AS;
 	public AudioClip hurtSound;
 
+	[Header("Ending Delay (seconds after death)")]
+	public float endingDelay = 5f;
+
 	void Start () {
 		start();
 		AS = GetComponent<AudioSource>();
-
-		// GOLEM 死亡後觸發完場 UI
-		dieEvent.AddListener(OnBossDied);
-	}
-
-	private void OnBossDied()
-	{
-		StartCoroutine(ShowEndUIAfterDelay());
-	}
-
-	private IEnumerator ShowEndUIAfterDelay()
-	{
-		yield return new WaitForSeconds(5f);
-
-		// 優先使用 EndingUI（有計分動畫）
-		EndingUI endingUI = FindObjectOfType<EndingUI>(true);
-		if (endingUI != null)
-		{
-			PlayerLife playerLife = FindObjectOfType<PlayerLife>();
-			int remainHP = playerLife != null ? Mathf.Max(0, Mathf.RoundToInt(playerLife.HP)) : 0;
-			int gemCount = Mathf.Max(0, CrystalCount.crystal);
-			endingUI.ShowEnding(remainHP, gemCount);
-		}
-		else
-		{
-			// fallback：場景中沒有 EndingUI 時，改用舊的兩個按鈕
-			Debug.LogWarning("[BossController] 找不到 EndingUI，使用 EndGameButtons 作備用。");
-			EndGameButtons.Show();
-		}
 	}
 
 	protected override void Hurt(Attack attack)
 	{
-		// 三連擊收尾技無視 hurtInterval，確保推力一定觸發
-		bool isComboFinisher = attack.attackStep >= 3;
-
-		if (!dead && (isComboFinisher || Time.time >= nextHurtTime))
+		if (!dead && Time.time >= nextHurtTime)
 		{
 			SlowMotion.Slow(0.1f, 5);
 			HP -= attack.damage;
@@ -64,21 +35,9 @@ public class BossController : Enemy {
 			}
 			AS.PlayOneShot(hurtSound);
 
-			// 第三擊（收尾技）無論 canPushEnemy 是否勾選，一律強制推擊
-			if (attack.canPushEnemy || attack.attackStep >= 3)
-			{
-				Vector3 pushBack = (transform.position - attack.position).normalized;
-				pushBack.y = 0f;
-				if (pushBack.sqrMagnitude < 0.001f)
-					pushBack = Vector3.forward;
-				pushBack.Normalize();
-
-				float pushSpeed = attack.attackStep >= 3 ? 0.4f
-				                : attack.attackStep == 2 ? 0.25f
-				                : 0.15f;
-				pushBack *= Mathf.Max(attack.strength, 1) * pushSpeed;
-				GetComponent<Rigidbody>().AddForce(pushBack, ForceMode.VelocityChange);
-			}
+			Vector3 pushBack = (transform.position - attack.position).normalized;
+			pushBack *= attack.strength;
+			GetComponent<Rigidbody>().AddForce(pushBack * 10, ForceMode.Impulse);
 
 			if (attack.type == AttackType.frozen)
 			{
@@ -89,6 +48,31 @@ public class BossController : Enemy {
 			}
 			nextHurtTime = Time.time + hurtInterval;
 		}
+	}
+
+	protected override void Die()
+	{
+		base.Die();
+		StartCoroutine(ShowEndingAfterDelay());
+	}
+
+	private IEnumerator ShowEndingAfterDelay()
+	{
+		// 等待 endingDelay 秒（使用真實時間，避免慢動作影響）
+		yield return new WaitForSecondsRealtime(endingDelay);
+
+		EndingUI endingUI = FindObjectOfType<EndingUI>();
+		if (endingUI == null)
+		{
+			Debug.LogWarning("[BossController] 找不到場景中的 EndingUI，請確認場景中有掛 EndingUI 腳本的物件。");
+			yield break;
+		}
+
+		PlayerLife playerLife = FindObjectOfType<PlayerLife>();
+		int remainHP = playerLife != null ? Mathf.RoundToInt(playerLife.HP) : 0;
+		int gemCount = CrystalCount.crystal;
+
+		endingUI.ShowEnding(remainHP, gemCount);
 	}
 
 	void Update () {

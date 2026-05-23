@@ -241,7 +241,7 @@ public class PlayerController : MonoBehaviour
 
         foreach (var enemy in enemies)
         {
-            if (enemy.IsDead) continue;
+            if (!enemy.gameObject.activeInHierarchy) continue;
 
             float dist = Vector3.Distance(transform.position, enemy.transform.position);
             if (dist < autoFaceRange && dist < minDist)

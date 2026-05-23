@@ -82,7 +82,7 @@ public class RogueController : Enemy
             NM.updateRotation = false;
     }
 
-    protected override void update()
+    protected new void update()
     {
         // 死亡後停止所有行為
         if (dead) return;
