@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 public class PlayerController : MonoBehaviour
 {
@@ -23,6 +24,7 @@ public class PlayerController : MonoBehaviour
     [Header("Auto Face Enemy")]
     public bool autoFaceEnemy = true;
     public float autoFaceRange = 10f;
+    public float enemyRefreshInterval = 0.25f;
 
     [HideInInspector] public bool AllowRotate = true;
     [HideInInspector] public bool NextAttack = true;
@@ -30,17 +32,24 @@ public class PlayerController : MonoBehaviour
     [HideInInspector] public int CurrentAttackStep = 0;
 
     [Header("2H Combo Miss States")]
-    [Tooltip("揮空時可隨機跳到的 2H 狀態名稱（在 Animator 裡叫什麼就填什麼）")]
-    public string[] missAttackStateNames = { "2H1", "2H2", "2H3", "2H4", "2H5" };
+    public string[] missAttackStateNames =
+    {
+        "Base Layer.2H1",
+        "Base Layer.2H2",
+        "Base Layer.2H3",
+        "Base Layer.2H4",
+        "Base Layer.2H5"
+    };
 
-    [Tooltip("打中後要接的下一個攻擊狀態（通常是 attack02）")]
-    public string hitContinueStateName = "attack02";
+    public string hitContinueStateName = "Base Layer.attack02";
 
     private Animator anim;
+    private Transform camTf;
 
     private float moveSpeed;
     private float touchStartTime;
     private float screenDiagonal;
+    private float enemyRefreshTimer;
 
     private Vector2 touchStartPos;
     private Vector2 currentTouchPos;
@@ -48,24 +57,38 @@ public class PlayerController : MonoBehaviour
 
     private bool isRolling = false;
     private bool isTouching = false;
-
     private bool holdTriggered = false;
+
+    private Enemy cachedClosestEnemy;
+    private readonly List<Enemy> enemyBuffer = new List<Enemy>();
+
+    private static readonly int SpeedHash = Animator.StringToHash("speed");
+    private static readonly int AttackHash = Animator.StringToHash("attack");
+    private static readonly int RollHash = Animator.StringToHash("roll");
 
     void Start()
     {
         anim = GetComponent<Animator>();
+        camTf = Camera.main != null ? Camera.main.transform : null;
         screenDiagonal = Mathf.Sqrt(Screen.width * Screen.width + Screen.height * Screen.height);
+        RefreshEnemyCache();
     }
 
     void Update()
     {
         HandleTouchInput();
-
-        anim.SetFloat("speed", moveSpeed);
+        anim.SetFloat(SpeedHash, moveSpeed);
 
         if (isTouching && moveSpeed > 0.05f && AllowRotate)
         {
             RotateChar();
+        }
+
+        enemyRefreshTimer -= Time.deltaTime;
+        if (enemyRefreshTimer <= 0f)
+        {
+            enemyRefreshTimer = enemyRefreshInterval;
+            RefreshEnemyCache();
         }
 
         if (autoFaceEnemy && AllowRotate && moveSpeed <= 0.05f && !isTouching)
@@ -109,7 +132,6 @@ public class PlayerController : MonoBehaviour
         currentTouchPos = touch.position;
         touchStartTime = Time.time;
         moveSpeed = 0f;
-
         holdTriggered = false;
     }
 
@@ -126,7 +148,7 @@ public class PlayerController : MonoBehaviour
             Debug.Log("Guard");
         }
 
-        moveSpeed = Mathf.Min(dragDistance * moveSensitivity, 2f);
+        moveSpeed = Mathf.Clamp(dragDistance * moveSensitivity, 0f, 2f);
     }
 
     void HandleTouchEnded(Touch touch)
@@ -155,7 +177,6 @@ public class PlayerController : MonoBehaviour
         }
         else if (isHoldStill)
         {
-            // 已經在 HandleTouchMoved 中輸出過 Guard，這裡不重複輸出
         }
 
         ResetTouchState();
@@ -172,43 +193,50 @@ public class PlayerController : MonoBehaviour
 
         AnimatorStateInfo s = anim.GetCurrentAnimatorStateInfo(0);
         bool inMissEligible = IsInMissEligibleState(s);
-        bool wasHit = CurrentAttackHit;   // 先記錄，後面才清除
+        bool wasHit = CurrentAttackHit;
 
         CurrentAttackHit = false;
         NextAttack = false;
-        anim.ResetTrigger("attack");
+        anim.ResetTrigger(AttackHash);
 
         if (inMissEligible)
         {
             if (wasHit)
             {
-                // 打中 → 直接接 attack02（或 hitContinueStateName 設定的狀態）
                 anim.CrossFade(hitContinueStateName, 0.05f);
             }
             else
             {
-                // 揮空 → 隨機一個 2H 動作
-                int idx = Random.Range(0, missAttackStateNames.Length);
-                anim.CrossFade(missAttackStateNames[idx], 0.05f);
+                if (missAttackStateNames != null && missAttackStateNames.Length > 0)
+                {
+                    int idx = Random.Range(0, missAttackStateNames.Length);
+                    anim.CrossFade(missAttackStateNames[idx], 0.05f);
+                }
+                else
+                {
+                    anim.SetTrigger(AttackHash);
+                }
             }
         }
         else
         {
-            // 正常起始攻擊（從 Idle 或 attack02/03 開始）
-            anim.SetTrigger("attack");
+            anim.SetTrigger(AttackHash);
         }
     }
 
-    /// <summary>
-    /// 判斷當前是否在「揮空可接 2H」的狀態（attack01 或任何 2H state）
-    /// </summary>
     bool IsInMissEligibleState(AnimatorStateInfo s)
     {
-        if (s.IsName("attack01") || s.IsName("meleeattack01"))
+        if (s.IsName("Base Layer.attack01") || s.IsName("Base Layer.meleeattack01"))
             return true;
+
+        if (missAttackStateNames == null) return false;
+
         foreach (string name in missAttackStateNames)
-            if (s.IsName(name))
+        {
+            if (!string.IsNullOrEmpty(name) && s.IsName(name))
                 return true;
+        }
+
         return false;
     }
 
@@ -217,10 +245,20 @@ public class PlayerController : MonoBehaviour
         CurrentAttackHit = true;
     }
 
+    public void OpenNextAttackWindow()
+    {
+        NextAttack = true;
+    }
+
+    public void CloseNextAttackWindow()
+    {
+        NextAttack = false;
+    }
+
     void TryRoll()
     {
-        anim.ResetTrigger("roll");
-        anim.SetTrigger("roll");
+        anim.ResetTrigger(RollHash);
+        anim.SetTrigger(RollHash);
         anim.speed = rollSpeedMultiplier;
         isRolling = true;
     }
@@ -232,49 +270,56 @@ public class PlayerController : MonoBehaviour
         holdTriggered = false;
     }
 
-    void AutoFaceNearestEnemy()
+    void RefreshEnemyCache()
     {
-        Enemy[] enemies = FindObjectsOfType<Enemy>();
+        enemyBuffer.Clear();
+        enemyBuffer.AddRange(FindObjectsOfType<Enemy>());
 
-        Enemy closest = null;
+        cachedClosestEnemy = null;
         float minDist = Mathf.Infinity;
 
-        foreach (var enemy in enemies)
+        for (int i = 0; i < enemyBuffer.Count; i++)
         {
-            if (!enemy.gameObject.activeInHierarchy) continue;
+            Enemy enemy = enemyBuffer[i];
+            if (enemy == null || !enemy.gameObject.activeInHierarchy) continue;
 
             float dist = Vector3.Distance(transform.position, enemy.transform.position);
             if (dist < autoFaceRange && dist < minDist)
             {
                 minDist = dist;
-                closest = enemy;
+                cachedClosestEnemy = enemy;
             }
         }
+    }
 
-        if (closest != null)
-        {
-            Vector3 lookPos = closest.transform.position;
-            lookPos.y = transform.position.y;
+    void AutoFaceNearestEnemy()
+    {
+        if (cachedClosestEnemy == null) return;
 
-            Quaternion targetRot = Quaternion.LookRotation(lookPos - transform.position);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotSpeed * Time.deltaTime);
-        }
+        Vector3 lookPos = cachedClosestEnemy.transform.position;
+        lookPos.y = transform.position.y;
+
+        Vector3 dir = lookPos - transform.position;
+        if (dir.sqrMagnitude <= 0.001f) return;
+
+        Quaternion targetRot = Quaternion.LookRotation(dir);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotSpeed * Time.deltaTime);
     }
 
     public void RotateChar()
     {
         Vector2 dragDirection = currentTouchPos - touchStartPos;
 
-        if (dragDirection.sqrMagnitude < 1f)
+        if (dragDirection.sqrMagnitude < 1f || camTf == null)
             return;
 
         moveDirection = new Vector3(dragDirection.x, 0f, dragDirection.y);
-        moveDirection = Camera.main.transform.TransformDirection(moveDirection);
+        moveDirection = camTf.TransformDirection(moveDirection);
         moveDirection.y = 0f;
 
         if (moveDirection.sqrMagnitude > 0.001f)
         {
-            transform.rotation = Quaternion.LookRotation(moveDirection);
+            transform.rotation = Quaternion.LookRotation(moveDirection.normalized);
         }
     }
 
@@ -282,7 +327,7 @@ public class PlayerController : MonoBehaviour
     {
         AnimatorStateInfo state = anim.GetCurrentAnimatorStateInfo(0);
 
-        if (state.IsName("roll") || state.IsName("roll2") || state.IsName("roll3"))
+        if (state.IsName("Base Layer.roll") || state.IsName("Base Layer.roll2") || state.IsName("Base Layer.roll3"))
         {
             transform.position += anim.deltaPosition * rollPower;
         }
@@ -290,12 +335,12 @@ public class PlayerController : MonoBehaviour
         {
             float currentPower = (moveSpeed >= 0.5f) ? power * runPowerMultiplier : power;
             transform.position += anim.deltaPosition * currentPower;
+        }
 
-            if (isRolling)
-            {
-                anim.speed = 1f;
-                isRolling = false;
-            }
+        if (isRolling && !state.IsName("Base Layer.roll") && !state.IsName("Base Layer.roll2") && !state.IsName("Base Layer.roll3"))
+        {
+            anim.speed = 1f;
+            isRolling = false;
         }
     }
 }
