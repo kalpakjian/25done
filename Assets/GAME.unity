@@ -2280,6 +2280,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 10
+  hitDisabled: 0
 --- !u!1001 &180425023
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2489,6 +2490,21 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 0}
+--- !u!114 &191109674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 191109669}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0d47a4cdd9db004d970a20ba785113c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  attackDamage: 0
+  weaponDamage: 50
+  hitDisabled: 0
 --- !u!1 &194418684 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8279574536387549100, guid: 7ede4dcfdb86a814291fe8a84ca8b862, type: 3}
@@ -7271,6 +7287,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 20
+  hitDisabled: 0
 --- !u!65 &440338631
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -15267,6 +15284,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 10
+  hitDisabled: 0
 --- !u!65 &860383782
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -16532,6 +16550,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 10
+  hitDisabled: 0
 --- !u!1 &915627359 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7131713813555841062, guid: 63748d2014407a7458b5f61ea5653932, type: 3}
@@ -18100,6 +18119,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 10
+  hitDisabled: 0
 --- !u!65 &998852016
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -20097,6 +20117,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 10
+  hitDisabled: 0
 --- !u!1 &1114958906
 GameObject:
   m_ObjectHideFlags: 0
@@ -20210,6 +20231,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 10
+  hitDisabled: 0
 --- !u!65 &1116043417
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -20930,6 +20952,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 10
+  hitDisabled: 0
 --- !u!4 &1154253104 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7214371169738337839, guid: 9f420f69127f3154b910d132621cbaae, type: 3}
@@ -21978,6 +22001,18 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7319087121470121912, guid: 63748d2014407a7458b5f61ea5653932, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7319087121470121912, guid: 63748d2014407a7458b5f61ea5653932, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7319087121470121912, guid: 63748d2014407a7458b5f61ea5653932, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7319087121470121912, guid: 63748d2014407a7458b5f61ea5653932, type: 3}
       propertyPath: m_LocalPosition.x
       value: 108.9
       objectReference: {fileID: 0}
@@ -21987,7 +22022,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7319087121470121912, guid: 63748d2014407a7458b5f61ea5653932, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -24.4
+      value: -24.400002
       objectReference: {fileID: 0}
     - target: {fileID: 7319087121470121912, guid: 63748d2014407a7458b5f61ea5653932, type: 3}
       propertyPath: m_LocalRotation.w
@@ -22743,6 +22778,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 20
+  hitDisabled: 0
 --- !u!65 &1286401127
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -25462,6 +25498,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 10
+  hitDisabled: 0
 --- !u!4 &1470310882 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2060f4896cc71ad45bc46d8639ad4935, type: 3}
@@ -30718,6 +30755,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 10
+  hitDisabled: 0
 --- !u!1 &1805408291 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8504179832325001310, guid: e64d4f0df412ae84b82f633f2ac93b63, type: 3}
@@ -34617,6 +34655,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackDamage: 0
   weaponDamage: 10
+  hitDisabled: 0
 --- !u!1 &2100002735
 GameObject:
   m_ObjectHideFlags: 0
