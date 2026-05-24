@@ -442,9 +442,9 @@ public class EndingUI : MonoBehaviour
     private string FormatScore(int v)
     {
         v = Mathf.Max(0, v);
-        // <mspace=0.72em> 讓每個數字佔相同寬度，做出 8-digit 等寬效果
+        // <mspace=0.86em> 讓每個數字佔相同寬度（原 0.72em 增加 20%），做出 8-digit 等寬效果
         string digits = v.ToString("D" + Mathf.Max(1, totalDigits));
-        return "<mspace=0.72em>" + digits + "</mspace>";
+        return "<mspace=0.86em>" + digits + "</mspace>";
     }
 
     /// <summary>
