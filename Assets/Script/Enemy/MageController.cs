@@ -23,8 +23,11 @@ public class MageController : Enemy
     [Tooltip("施法後鎖定移動時間")]
     public float attackLockTime = 1.0f;
 
-    [Tooltip("真正 attack 開始後延遲幾秒發射 magic missile")]
-    public float missileReleaseDelay = 0.25f;
+    [Tooltip("attack 動畫出手幀設有 Animation Event 呼叫 OnAttackAnimFire() 來發射飛彈。\n若動畫沒有 Event，可開啟 useFallbackMissileTimer 並設定 fallbackMissileDelay 作為備援。")]
+    public float fallbackMissileDelay = 0.25f;
+
+    [Tooltip("是否啟用 fallback 計時發射（若已在 attack 動畫上設定 Animation Event，建議設為 false）")]
+    public bool useFallbackMissileTimer = true;
 
     [Header("Mana Settings")]
     [Tooltip("最大 mana")]
@@ -40,17 +43,17 @@ public class MageController : Enemy
     public int manaRestoreAmount = 5;
 
     [Header("Aiming Settings")]
-    [Tooltip("施法前瞄準時間")]
+    [Tooltip("aiming fallback 超時秒數（略大於 aiming 動畫長度即可）。\naiming 動畫末端的 Animation Event OnAimingAnimFinished() 會優先觸發 FinishAiming()；\n若 Event 未設定，則由此 timer 保底。Ranged_Magic_Spellcasting_Long = 2.53s。")]
     public float aimTime = 0.6f;
 
     [Tooltip("瞄準期間轉向玩家速度")]
     public float aimTurnSpeed = 10f;
 
-    [Tooltip("進入瞄準狀態的 Animator Trigger")]
-    public string aimingTriggerName = "attack";
+    [Tooltip("進入瞄準狀態的 Animator Trigger（觸發 aiming 動畫）")]
+    public string aimingTriggerName = "aiming";
 
-    [Tooltip("瞄準完成後正式施法 Trigger；若由 Exit Time 自動切換可留空")]
-    public string attackTriggerName = "";
+    [Tooltip("aiming 動畫完成後進入 attack 動畫的 Trigger")]
+    public string attackTriggerName = "attack";
 
     [Header("Channel Settings")]
     [Tooltip("回魔用的 Animator Trigger")]
@@ -226,8 +229,8 @@ public class MageController : Enemy
         isChannelingMana = false;
         hasCastThisAttack = false;
 
-        CancelInvoke(nameof(FinishAiming));
-        CancelInvoke(nameof(CastMissileFromAttack));
+        CancelInvoke(nameof(FinishAiming));        // 取消 aiming fallback 計時器
+        CancelInvoke(nameof(FallbackCastMissile)); // 取消 attack fallback 計時器
         CancelInvoke(nameof(OnAttackEnd));
         CancelInvoke(nameof(FinishChannelMana));
 
@@ -244,10 +247,24 @@ public class MageController : Enemy
         if (!string.IsNullOrEmpty(attackTriggerName))
             anim.ResetTrigger(attackTriggerName);
 
+        // 觸發 aiming 動畫
         if (!string.IsNullOrEmpty(aimingTriggerName))
             anim.SetTrigger(aimingTriggerName);
 
+        // aiming 動畫末端的 Animation Event OnAimingAnimFinished() 會優先呼叫 FinishAiming()。
+        // 這裡的 Invoke 只作為 fallback，確保 Event 未設定時也不會卡住。
         Invoke(nameof(FinishAiming), aimTime);
+    }
+
+    /// <summary>
+    /// 在 Ranged_Magic_Spellcasting_Long.anim 末端設有 Animation Event，呼叫此方法。
+    /// 確保 aiming 動畫完整播完後才進入 attack，並取消 fallback timer。
+    /// </summary>
+    public void OnAimingAnimFinished()
+    {
+        if (!isAiming) return;
+        CancelInvoke(nameof(FinishAiming));
+        FinishAiming();
     }
 
     void FinishAiming()
@@ -265,6 +282,7 @@ public class MageController : Enemy
         StopMoving();
         FaceCastDirectionHorizontally();
 
+        // aiming 動畫完成，現在觸發 attack 動畫
         if (!string.IsNullOrEmpty(attackTriggerName))
             anim.SetTrigger(attackTriggerName);
 
@@ -272,11 +290,29 @@ public class MageController : Enemy
         isAttacking = true;
         hasCastThisAttack = false;
 
-        Invoke(nameof(CastMissileFromAttack), missileReleaseDelay);
+        // 飛彈發射由 Ranged_Magic_Shoot.anim 的 Animation Event OnAttackAnimFire() 觸發。
+        // 若動畫沒有設定 Event，useFallbackMissileTimer = true 作為備援。
+        if (useFallbackMissileTimer)
+            Invoke(nameof(FallbackCastMissile), fallbackMissileDelay);
+
         Invoke(nameof(OnAttackEnd), attackLockTime);
     }
 
-    void CastMissileFromAttack()
+    /// <summary>
+    /// Ranged_Magic_Shoot.anim 的出手幀設有 Animation Event，呼叫此方法發射飛彈。
+    /// 這確保飛彈在 attack 動畫出手瞬間發射，完全與動畫同步。
+    /// </summary>
+    public void OnAttackAnimFire()
+    {
+        if (!isAttacking || hasCastThisAttack) return;
+
+        // 取消 fallback，由動畫事件主導
+        CancelInvoke(nameof(FallbackCastMissile));
+        CastMagicMissile();
+    }
+
+    // fallback：attack 動畫沒有 Animation Event 時由計時器補位
+    void FallbackCastMissile()
     {
         if (!isAttacking || hasCastThisAttack)
             return;
@@ -318,7 +354,7 @@ public class MageController : Enemy
     void OnAttackEnd()
     {
         isAttacking = false;
-        CancelInvoke(nameof(CastMissileFromAttack));
+        CancelInvoke(nameof(FallbackCastMissile));
     }
 
     void LockCastDirection()

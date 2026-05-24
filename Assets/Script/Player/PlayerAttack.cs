@@ -42,8 +42,7 @@ public class PlayerAttack : StateMachineBehaviour {
 
 		weapon.type = type;
 		weapon.strength = strength;
-		// 第三擊強制開啟 canPushEnemy，即使 Inspector 沒有勾選
-		weapon.canPushEnemy = canPushEnemy || resolvedStep >= 3;
+		weapon.canPushEnemy = canPushEnemy;
 		weapon.ResetHitTargets();
 	}
 

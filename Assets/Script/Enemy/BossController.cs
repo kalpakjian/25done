@@ -48,6 +48,8 @@ public class BossController : Enemy {
 				Invoke("Recover", 5);
 			}
 			nextHurtTime = Time.time + hurtInterval;
+			// 被打到後立即允許反擊，不受 attackInterval 冷卻影響
+			nextAttackTime = Time.time;
 		}
 	}
 
